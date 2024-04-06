@@ -211,6 +211,17 @@
     var title_type, title_encode, title_audio, title_resolution, title_group, title_is_complete, title_is_episode, title_x265, title_x264;
     var title_DVD720 = false;
 
+    let title_wrongBD = title.match(/Blu[Rr]ay|Blu-Ray|BDMV|BLURAY/);
+    let title_wrongBDrip = title.match(/BD[Rr]ip|Blu-?ray|Blu-Ray|BLURAY/);
+    let title_HEVC = title.includes(" HEVC");
+    let title_AVC = title.includes(" AVC");
+
+    let title_resolution_pos = title.search(/\b((2160|1080|720|576|480)[pi])/);
+    let title_source_pos = title.search(/BLU-?RAY|Blu-?[Rr]ay|WEB[- ]?DL|Remux|REMUX|(BD|DVD|WEB)[Rr]ip|BDMV|\bBD\b|\bDVD\b|\bU?HDTV/);
+    let title_HDR_pos = title.search(/\b(DV|DoVi|HDR|HLG)/);
+    let title_video_pos = title.search(/\b(HEVC|AVC|AV1|VP9|VC-1|MPEG-?[24]|(H\.?|x)26[45])/);
+    let title_audio_pos = title.search(/\b(AAC|(E-?)?AC3|\bDD|TrueHD|DTS|FLAC|LPCM|OPUS|WAV|MP[123]|M4A|APE)/);
+
     // 媒介
     if(title_lowercase.includes("web-dl") || title_lowercase.includes("webdl")){
         title_type = 7;
@@ -455,8 +466,9 @@
             //console.log("type:", type, type_constant[type]);
 
             // 编码
+            let text_no_audio = text.replace(/音频编码/, 'AUDIO');
             Object.keys(encode_constant).some(key => {
-                if (text.indexOf('编码: ' + encode_constant[key]) >= 0) {
+                if (text_no_audio.indexOf('编码: ' + encode_constant[key]) >= 0) {
                     encode = Number(key);
                     return true;
                 }
@@ -539,11 +551,13 @@
 
             // 根据 Mediainfo 判断标签选择
             //console.log("===========================mediainfo:"+mediainfo);
-            const audioMatch = mediainfo.match(/Audio.*?Language:(\w+)/);
-            const audioLanguage = audioMatch ? audioMatch[1] : 'Not found';
-            // console.log(`The language of the audio is: ${audioLanguage}`);
-            if (!audioLanguage.includes("Text") && (audioLanguage.includes("Chinese") || audioLanguage.includes("Mandarin"))){
-                isAudioChinese = true;
+            const audioMatch = mediainfo.match(/Audio.*?Language:(\w+)/g) || [];
+            for (let audioOne of audioMatch) {
+                const audioLanguage = audioOne.match(/Language:(\w+)/)[1];
+                // console.log(`The languages of the Audio are: ${audioLanguage}`);
+                if (!audioOne.includes("Text") && (audioLanguage.includes("Chinese") || audioLanguage.includes("Mandarin"))){
+                    isAudioChinese = true;
+                }
             }
 
             const textMatches = mediainfo.match(/Text.*?Language:(\w+)/g) || [];
@@ -691,6 +705,20 @@
         }
     }
 
+    if (title_type == type && (title_type == 1 || title_type == 8)) {
+        if (title_wrongBD) {
+            $('#assistant-tooltips').append(`标题中${title_wrongBD}应为Blu-ray<br/>`);
+            error = true;
+        }
+    }
+
+    if (title_type == type && title_type == 10) {
+        if (title_wrongBDrip) {
+            $('#assistant-tooltips').append(`标题中${title_wrongBDrip}应为BluRay<br/>`);
+            error = true;
+        }
+    }
+
     // Other || SD(480 || 360)
     if ((resolution === 5 || resolution === 4 || title_resolution === 4) && !(godDramaSeed || officialSeed)){
          $('#assistant-tooltips-warning').append("请检查是否有更高清的资源<br/>");
@@ -766,12 +794,12 @@
     }
 
     if(isTextChinese && !isTagTextChinese) {
-        $('#assistant-tooltips-warning').append('未选择中字标签<br/>');
+        $('#assistant-tooltips').append('未选择中字标签<br/>');
         error = true;
     }
 
     if(isVCBStudio && !isTagVCBStudio) {
-        $('#assistant-tooltips-warning').append('VCB资源未选择VCB-Studio标签<br/>');
+        $('#assistant-tooltips').append('VCB资源未选择VCB-Studio标签<br/>');
         error = true;
     }
 
@@ -820,6 +848,13 @@
     }
 
     if (cat === 408) {
+        $('#assistant-tooltips').empty();
+        error = false;
+        $('#assistant-tooltips-warning').empty();
+        warning = false;
+    }
+
+    if (cat === 409) {
         $('#assistant-tooltips').empty();
         error = false;
         $('#assistant-tooltips-warning').empty();
