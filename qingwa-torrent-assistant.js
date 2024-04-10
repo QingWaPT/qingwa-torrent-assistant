@@ -139,6 +139,8 @@
         }
         
         if (text.includes("DISC INFO") || text.includes("Disc Title:") || text.includes("Disc Label:")) return 1;
+
+        return -1;
     }
 
     var isBriefContainsInfo = false;  //是否包含Mediainfo
@@ -777,7 +779,7 @@
             }
             if (mi_type == 1) {
                 //检查DIY和原生原盘标签
-                TagError = false;
+                var TagError = false;
                 if (isDIY) {
                     if (!isTagDIY) {
                         $('#assistant-tooltips').append('未选择DIY标签 ');
