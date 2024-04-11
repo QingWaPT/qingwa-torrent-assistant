@@ -4,8 +4,8 @@
 // @version      1.0.6
 // @description  不可蛙-审种助手
 // @author       qingwa.pro@jaycode
-// @match        *://new.qingwa.pro/details.php*
-// @icon         https://new.qingwa.pro/favicon.ico
+// @match        *://qingwapt.com/details.php*
+// @icon         https://qingwapt.com/favicon.ico
 // @require      https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -379,7 +379,7 @@
     var isDV = false;
     var isHDR = false;
     var isHDR10P = false;
-    var isDIY = title.match(/(BHYS|sGnb|D[Ii]Y)@/);
+    var isDIY = title.match(/(BHYS|sGnb|SPM|D[Ii]Y)@/);
 
     var tdlist = $('#outer').find('td');
     for (var i = 0; i < tdlist.length; i ++) {
