@@ -249,6 +249,9 @@
     let title_ES = find_season_episod(title);
     let title_encode_system = title.match(/\b(NTSC|PAL)/);
 
+    let title_audio_complete = title.match(/\b(DD[P\+]?|FLAC|LPCM|AC3|MP[123]|OPUS|DTS([: -]?X|-?HD ?MA)?) ?(\d[ \.]?\d)?/);
+    let title_AC3 = title.includes(' AC3');
+
     // 媒介
     if(title_lowercase.includes("web-dl") || title_lowercase.includes("webdl")){
         title_type = 7;
@@ -783,6 +786,18 @@
     if (title_audio_pos == -1) {
         $('#assistant-tooltips').append('标题中缺少音频编码<br/>');
         error = true;
+    }
+
+    if (title_AC3) {
+        $('#assistant-tooltips').append('AC3改为DD<br/>');
+        error = true;
+    }
+
+    if (title_audio_complete) {
+        if (!title_audio_complete[0].match(/\d\.\d/)) {
+            $('#assistant-tooltips').append('标题中未正确标示声道数<br/>');
+            error = true;
+        }
     }
 
     if (title_video_pos != -1 && title_audio_pos != -1) {
