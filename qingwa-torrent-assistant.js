@@ -899,8 +899,8 @@
     }
 
     if (!dbUrl && !godDramaSeed) {
-        $('#assistant-tooltips').append('简介中未检测到IMDb或豆瓣链接<br/>');
-        error = true;
+        $('#assistant-tooltips-warning').append('简介中未检测到IMDb或豆瓣链接<br/>');
+        warning = true;
     }
 
     if(mediainfo_short === mediainfo && officialSeed == true) {
