@@ -130,6 +130,15 @@
         //console.log("内容中不包含 IMDb 或 Douban 链接");
     }
 
+    var find_season_episod = function(text) {
+        if (title.match(/\bS\d\d/)) {
+            if (title.match(/\bS\d+\s?E\d+/)) return 0; 
+            if (title.match(/\bS\d+-/)) return 2; //multi seasons case
+            return 1;
+        }
+        return -1;
+    }
+
     var find_info = function(text) {
         if (text.includes("Complete name") && text.includes("General") && text.includes("Video")) return 0;
         
@@ -202,7 +211,7 @@
     var godDramaSeed = 0; //驻站短剧组种子
     var officialMusicSeed = 0; //官组音乐种子
     var isVCBStudio = false;  //VCB-Studio
-    if(title_lowercase.includes("frog") || title_lowercase.includes("froge") || title_lowercase.includes("frogweb")) {
+    if(title_lowercase.includes("frog") || title_lowercase.includes("froge") || title_lowercase.includes("frogweb") || title.includes("Loong@QingWa")) {
         officialSeed = 1;
         //console.log("官种");
     }
@@ -232,10 +241,13 @@
     let title_10bit = title.includes("10bit");
 
     let title_resolution_pos = title.search(/\b((2160|1080|720|576|480)[pi])/);
-    let title_source_pos = title.search(/BLU-?RAY|Blu-?[Rr]ay|WEB[- ]?DL|Remux|REMUX|(BD|DVD|WEB)[Rr]ip|BDMV|\bBD\b|\bDVD\b|\bU?HDTV/);
+    let title_source_pos = title.search(/BLU-?RAY|Blu-?[Rr]ay|WEB[- ]?DL|Remux|REMUX|(BD|DVD|WEB)[Rr]ip|BDMV|\bBD\b|\bDVD[5|9]?\b|\bU?HDTV/);
     let title_HDR_pos = title.search(/\b(DV|DoVi|HDR|HLG)/);
     let title_video_pos = title.search(/\b(HEVC|AVC|AV1|VP9|VC-1|MPEG-?[24]|(H\.?|x)26[45])/);
     let title_audio_pos = title.search(/\b(AAC|(E-?)?AC3|\bDD|TrueHD|DTS|FLAC|LPCM|OPUS|WAV|MP[123]|M4A|APE)/);
+
+    let title_ES = find_season_episod(title);
+    let title_encode_system = title.match(/\b(NTSC|PAL)/);
 
     // 媒介
     if(title_lowercase.includes("web-dl") || title_lowercase.includes("webdl")){
@@ -348,7 +360,7 @@
         title_DVD720 = true;
     }
 
-    var subtitle, cat, type, encode, audio, resolution, area, group, anonymous, is_complete,category;
+    var subtitle, cat, type, encode, audio, resolution, area, group, anonymous, category;
     var poster;
     var fixtd, douban, imdb, mediainfo, mediainfo_short,mediainfo_err;
     var isGroupSelected = false;     //是否选择了制作组
@@ -365,6 +377,11 @@
     var isAudioChinese = false;
     var isTextChinese = false;
     var isTextEnglish = false;
+
+    var isTagComplete = false;
+    var isTagIncomplete = false;
+    var isTagCollection = false;
+
     var mi_x265 = false;
     var mi_x264 = false;
     var mi_type;
@@ -420,8 +437,17 @@
                 // console.log("已选择VCB-Studio标签");
             }
             if (text.indexOf('完结') >= 0) {
-                is_complete = true;
+                isTagComplete = true;
             }
+
+            if (text.includes('分集')) {
+                isTagIncomplete = true;
+            }
+
+            if (text.includes('合集')) {
+                isTagCollection = true;
+            }
+
             if(text.includes("驻站")){
                 isTagResident = true;
                 // console.log("已选择驻站标签");
@@ -725,9 +751,16 @@
         }
     }
 
-    if (title_resolution_pos == -1 && title_type == 2) {
-        $('#assistant-tooltips').append('标题中缺少分辨率<br/>');
-        error = true;
+    if (title_resolution_pos == -1) {
+        if (title_type == 2 || title_type == 9) {
+            if (!title_encode_system) {
+                $('#assistant-tooltips').append('标题中缺少分辨率或制式<br/>');
+                error = true;
+            }
+        } else {
+            $('#assistant-tooltips').append('标题中缺少分辨率<br/>');
+            error = true;
+        }
     }
 
     if (title_source_pos == -1) {
@@ -835,10 +868,19 @@
          warning = true;
     }
 
-    if (title_is_complete && !is_complete && (cat === 402 || cat === 403)) {
-        //完结分集的检测需进行
-        $('#assistant-tooltips-warning').append("完结剧集请添加完结标签<br/>");
-         warning = true;
+    if (title_ES >=1  && !isTagComplete) {
+        $('#assistant-tooltips').append("完结剧集请添加完结标签<br/>");
+         error = true;
+    }
+
+    if (title_ES == 0  && !isTagIncomplete) {
+        $('#assistant-tooltips').append("请添加分集标签<br/>");
+         error = true;
+    }
+
+    if (title_ES >= 0 && title_ES < 2  && isTagCollection) {
+        $('#assistant-tooltips').append("不应选择合集标签<br/>");
+         error = true;
     }
 
     if (!dbUrl && !godDramaSeed) {
