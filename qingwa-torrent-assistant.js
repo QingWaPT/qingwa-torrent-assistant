@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         qingwa-torrent-assistant
 // @namespace    http://tampermonkey.net/
-// @version      1.0.6
+// @version      1.0.7
 // @description  不可蛙-审种助手
 // @author       qingwa.pro@jaycode
 // @match        *://qingwapt.com/details.php*
@@ -374,10 +374,12 @@
     var isReseedProhibited = false;  //禁转
     var isOfficialSeedLabel = false; //官方
     var isTagTextChinese = false;    //中字
-    var isTagAudioChinese = false;   //国语
+    var isTagAudioMandarin = false;   //国语
+    var isTagAudioCantonese = false;   //粤语
     var isTagVCBStudio = false;      //VCB-Studio
     var isTagResident = false;       //标签是否选择驻站
-    var isAudioChinese = false;
+    var isAudioMandarin = false;
+    var isAudioCantonese = false;
     var isTextChinese = false;
     var isTextEnglish = false;
 
@@ -428,8 +430,12 @@
                 // console.log("已选择官方标签");
             }
             if(text.includes("国语")){
-                isTagAudioChinese = true;
+                isTagAudioMandarin = true;
                 // console.log("已选择国语标签");
+            }
+            if(text.includes("粤语")){
+                isTagAudioCantonese = true;
+                // console.log("已选择粤语标签");
             }
             if(text.includes("中字")){
                 isTagTextChinese = true;
@@ -600,12 +606,29 @@
 
             // 根据 Mediainfo 判断标签选择
             //console.log("===========================mediainfo:"+mediainfo);
-            const audioMatch = mediainfo.match(/Audio.*?Language:(\w+)/g) || [];
+            const audioMatch = mediainfo.matchAll(/Audio.*?Language:(\w+)/g) || [];
             for (let audioOne of audioMatch) {
-                const audioLanguage = audioOne.match(/Language:(\w+)/)[1];
+                //const audioLanguage = audioOne.match(/Language:(\w+)/)[1];
                 // console.log(`The languages of the Audio are: ${audioLanguage}`);
-                if (!audioOne.includes("Text") && (audioLanguage.includes("Chinese") || audioLanguage.includes("Mandarin"))){
-                    isAudioChinese = true;
+                const audioLanguage = audioOne[1];
+                if (audioOne[0].includes("Text")) {
+                    continue;
+                } 
+                if (audioLanguage.includes("Chinese")) {
+                    if (subtitle.includes("粤")) {
+                        isAudioCantonese = true;
+                    } else {
+                        isAudioMandarin = true;
+                    }
+                    if (subtitle.includes("国语") || subtitle.includes("国配") || subtitle.includes("国粤")) {
+                        isAudioMandarin = true;
+                    }
+                }
+                if (audioLanguage.includes("Mandarin")){
+                    isAudioMandarin = true;
+                }
+                if (audioLanguage.includes("Cantonese")){
+                    isAudioCantonese = true;
                 }
             }
 
@@ -637,6 +660,7 @@
             }
             if (mediainfo.includes("SMPTE ST 2094") || mediainfo.includes("HDR10+")) {
                 isHDR10P = true;
+                isHDR = true;
             }
         }
     }
@@ -899,8 +923,8 @@
     }
 
     if (!dbUrl && !godDramaSeed) {
-        $('#assistant-tooltips').append('简介中未检测到IMDb或豆瓣链接<br/>');
-        error = true;
+        $('#assistant-tooltips-warning').append('简介中未检测到IMDb或豆瓣链接<br/>');
+        warning = true;
     }
 
     if(mediainfo_short === mediainfo && officialSeed == true) {
@@ -951,8 +975,13 @@
         error = true;
     }
 
-    if(isAudioChinese && !isTagAudioChinese) {
+    if(isAudioMandarin && !isTagAudioMandarin) {
         $('#assistant-tooltips').append('未选择国语标签<br/>');
+        error = true;
+    }
+
+    if(isAudioCantonese && !isTagAudioCantonese) {
+        $('#assistant-tooltips').append('未选择粤语标签<br/>');
         error = true;
     }
 
