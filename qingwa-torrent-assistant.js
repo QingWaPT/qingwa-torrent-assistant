@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         qingwa-torrent-assistant
 // @namespace    http://tampermonkey.net/
-// @version      1.0.7
+// @version      1.0.8
 // @description  不可蛙-审种助手
 // @author       qingwa.pro@jaycode
-// @match        *://qingwapt.com/details.php*
+// @match        *://*.qingwapt.com/details.php*
+// @match        *://*.qingwa.pro/details.php*
 // @icon         https://qingwapt.com/favicon.ico
 // @require      https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js
 // @grant        GM_setValue
@@ -244,12 +245,12 @@
     let title_source_pos = title.search(/BLU-?RAY|Blu-?[Rr]ay|WEB[- ]?DL|Remux|REMUX|(BD|DVD|WEB)[Rr]ip|BDMV|\bBD\b|\bDVD[5|9]?\b|\bU?HDTV/);
     let title_HDR_pos = title.search(/\b(DV|DoVi|HDR|HLG)/);
     let title_video_pos = title.search(/\b(HEVC|AVC|AV1|VP9|VC-1|MPEG-?[24]|(H\.?|x)26[45])/);
-    let title_audio_pos = title.search(/\b(AAC|(E-?)?AC3|\bDD|TrueHD|DTS|FLAC|LPCM|OPUS|WAV|MP[123]|M4A|APE)/);
+    let title_audio_pos = title.replace('WAVVE','WAAAE').search(/\b(AAC|(E-?)?AC3|\bDD|TrueHD|DTS|FLAC|LPCM|OPUS|WAV|MP[123]|M4A|APE)/);
 
     let title_ES = find_season_episod(title);
     let title_encode_system = title.match(/\b(NTSC|PAL)/);
 
-    let title_audio_complete = title.match(/\b(DD[P\+]?|FLAC|LPCM|AC3|MP[123]|OPUS|DTS([: -]?X|-?HD ?MA)?) ?(\d[ \.]?\d)?/);
+    let title_audio_complete = title.match(/\b(DD[P\+]?|FLAC|LPCM|AC3|MP[123]|OPUS|DTS([: -]?X|-?HD ?(M|HR)A)?) ?(\d[ \.]?\d)?/);
     let title_AC3 = title.includes(' AC3');
 
     // 媒介
