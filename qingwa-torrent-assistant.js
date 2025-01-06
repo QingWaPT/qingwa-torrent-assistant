@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         qingwa-torrent-assistant
 // @namespace    http://tampermonkey.net/
-// @version      1.0.8
+// @version      1.0.9
 // @description  不可蛙-审种助手
 // @author       qingwa.pro@jaycode
 // @match        *://*.qingwapt.com/details.php*
 // @match        *://*.qingwa.pro/details.php*
 // @icon         https://qingwapt.com/favicon.ico
-// @require      https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js
+// @require      https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_registerMenuCommand
