@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name         qingwa-torrent-assistant
 // @namespace    http://tampermonkey.net/
-// @version      1.0.9
-// @description  不可蛙-审种助手
-// @author       qingwa.pro@jaycode
+// @version      1.0.10
+// @description  QingWaPT-审种助手
+// @author       QingWaPT-Official
+// @thanks       SpringSunday-Torrent-Assistant, Agsv-Torrent-Assistant
 // @match        *://*.qingwapt.com/details.php*
 // @match        *://*.qingwa.pro/details.php*
 // @icon         https://qingwapt.com/favicon.ico
@@ -17,10 +18,6 @@
 // @downloadURL https://update.greasyfork.org/scripts/490095/qingwa-torrent-assistant.user.js
 // @updateURL https://update.greasyfork.org/scripts/490095/qingwa-torrent-assistant.meta.js
 // ==/UserScript==
-
-/*
- * 改自Agsv-Torrent-Assistant
- */
 
 (function() {
     'use strict';
@@ -116,7 +113,7 @@
     }
 
     const brief = $("#kdescr").text().toLowerCase();          // 获取元素的文本内容
-    const Brief = $("#kdescr").text(); 
+    const Brief = $("#kdescr").text();
     //console.log("brief:", brief);
     const containsIMDbLink = brief.includes("imdb.com");       // 检查内容是否包含 imdb.com 链接
     const containsDoubanLink = brief.includes("douban.com");   // 检查内容是否包含 douban.com 链接
@@ -133,7 +130,7 @@
 
     var find_season_episod = function(text) {
         if (title.match(/\bS\d\d/)) {
-            if (title.match(/\bS\d+\s?E\d+/)) return 0; 
+            if (title.match(/\bS\d+\s?E\d+/)) return 0;
             if (title.match(/\bS\d+-/)) return 2; //multi seasons case
             return 1;
         }
@@ -142,12 +139,12 @@
 
     var find_info = function(text) {
         if (text.includes("Complete name") && text.includes("General") && text.includes("Video")) return 0;
-        
+
         if (text.includes("File name") && text.includes("General") && text.includes("Video")) {
             //旧版本mediainfo
             return 0;
         }
-        
+
         if (text.includes("DISC INFO") || text.includes("Disc Title:") || text.includes("Disc Label:")) return 1;
 
         return -1;
@@ -158,13 +155,13 @@
         isBriefContainsInfo = true;
         // console.log("简介中包含Mediainfo");
     }
-    
+
     if (Brief.includes("File name") && Brief.includes("General") && Brief.includes("Video")) {
 		//旧版本mediainfo
         isBriefContainsInfo = true;
         // console.log("简介中包含Mediainfo");
     }
-    
+
     if (Brief.includes("DISC INFO") || Brief.includes("Disc Title:") || Brief.includes("Disc Label:")) {
         isBriefContainsInfo = true;
     }
@@ -391,11 +388,11 @@
     var mi_x265 = false;
     var mi_x264 = false;
     var mi_type;
-    
+
     var isTagDIY = false;
     var isTagUNTOUCHED = false;
-    var isTagREMUX = false; 
-    
+    var isTagREMUX = false;
+
     var isTagDV = false;
     var isTagHDR = false;
     var isTagHDR10P = false;
@@ -462,7 +459,7 @@
                 isTagResident = true;
                 // console.log("已选择驻站标签");
             }
-            
+
             if(text.includes("DIY")){
                 isTagDIY = true;
                 // console.log("已选择DIY标签");
@@ -475,7 +472,7 @@
                 isTagREMUX = true;
                 // console.log("已选择Remux标签");
             }
-            
+
             if(text.includes("杜比视界")){
                 isTagDV = true;
                 // console.log("已选择杜比视界标签");
@@ -614,7 +611,7 @@
                 const audioLanguage = audioOne[1];
                 if (audioOne[0].includes("Text")) {
                     continue;
-                } 
+                }
                 if (audioLanguage.includes("Chinese")) {
                     if (subtitle.includes("粤")) {
                         isAudioCantonese = true;
