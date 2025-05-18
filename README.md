@@ -2,10 +2,6 @@
 
 QingWaPT-审种助手
 
-## GitHub地址
-
-[GitHub Repository](https://github.com/QingWa-Official/qingwa-torrent-assistant)
-
 ## 提交流程
 
 dev/xxx -> main

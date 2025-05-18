@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name         qingwa-torrent-assistant
 // @namespace    http://tampermonkey.net/
-// @version      1.0.11
+// @version      1.1.0
 // @description  QingWaPT-审种助手
 // @author       QingWaPT-Official
 // @thanks       SpringSunday-Torrent-Assistant, Agsv-Torrent-Assistant
-// @match        *://*.qingwapt.com/details.php*
-// @match        *://*.qingwa.pro/details.php*
-// @icon         https://qingwapt.com/favicon.ico
+// @match        *://www.qingwapt.com/details.php*
+// @match        *://new.qingwa.pro/details.php*
+// @match        *://www.qingwapt.org/details.php*
+// @icon         https://qingwapt.com/logo/green.svg
 // @require      https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -58,6 +59,7 @@
     10: 'Encode',
     7: 'WEB-DL',
     4: 'HDTV',
+    11: 'MiniBD',
     2: 'DVD',
     3: 'CD',
     5: 'Track',
@@ -79,6 +81,7 @@
     9: 'DTS:X',
     14: 'DTS',
     10: 'DTS-HD MA',
+    3: 'DTS-HD HRA',
     11: 'TrueHD Atmos',
     12: 'TrueHD',
     13: 'LPCM',
@@ -92,6 +95,8 @@
     8: 'M4A',
     20: 'OPUS',
     7: 'Other',
+    22: 'AV3A',
+    23: 'USAC',
   };
 
   var resolution_constant = {
@@ -114,18 +119,16 @@
 
   const brief = $('#kdescr').text().toLowerCase(); // 获取元素的文本内容
   const Brief = $('#kdescr').text();
-  //console.log("brief:", brief);
   const containsIMDbLink = brief.includes('imdb.com'); // 检查内容是否包含 imdb.com 链接
   const containsDoubanLink = brief.includes('douban.com'); // 检查内容是否包含 douban.com 链接
   const containsTMDBLink = brief.includes('themoviedb.org'); // 检查内容是否包含 themoviedb.org 链接
+  const containsBGMLink = brief.includes('bgm.tv');
 
   var dbUrl; // 是否包含影片链接
-  if (containsIMDbLink || containsDoubanLink || containsTMDBLink) {
+  if (containsIMDbLink || containsDoubanLink || containsTMDBLink || containsBGMLink) {
     dbUrl = true;
-    //console.log("内容中包含 IMDb 或 Douban 链接");
   } else {
     dbUrl = false;
-    //console.log("内容中不包含 IMDb 或 Douban 链接");
   }
 
   var find_season_episod = function (text) {
@@ -148,7 +151,6 @@
       //旧版本mediainfo
       return 0;
     }
-
     if (text.includes('DISC INFO') || text.includes('Disc Title:') || text.includes('Disc Label:'))
       return 1;
 
@@ -158,18 +160,15 @@
   var isBriefContainsInfo = false; //是否包含Mediainfo
   if (Brief.includes('Complete name') && Brief.includes('Movie name') && Brief.includes('Video')) {
     isBriefContainsInfo = true;
-    // console.log("简介中包含Mediainfo");
   }
 
   if (Brief.includes('Complete name') && Brief.includes('General') && Brief.includes('Video')) {
     isBriefContainsInfo = true;
-    // console.log("简介中包含Mediainfo");
   }
 
   if (Brief.includes('File name') && Brief.includes('General') && Brief.includes('Video')) {
     //旧版本mediainfo
     isBriefContainsInfo = true;
-    // console.log("简介中包含Mediainfo");
   }
 
   if (
@@ -181,26 +180,25 @@
   }
   //错误info信息
   /*
-      // 中文详细info
-      if (brief.includes("概览") && brief.includes("视频") && brief.includes("音频")) {
-          isBriefContainsInfo = true;
-          // console.log("简介中包含Mediainfo");
-      }
-      if (brief.includes("nfo信息")) {
-          isBriefContainsInfo = true;
-      }
-      if (brief.includes("release date") && brief.includes("source")) {
-          isBriefContainsInfo = true;
-      }
-      if (brief.includes("release.name") || brief.includes("release.size")) {
-          isBriefContainsInfo = true;
-      }
-      if ((brief.includes("文件名") || brief.includes("文件名称")) && (brief.includes("体　积")||brief.includes("体　　积"))) {
-          isBriefContainsInfo = true;
-      }
-      if (brief.includes("source type") || brief.includes("video bitrate")) {
-          isBriefContainsInfo = true;
-      } */
+    // 中文详细info
+    if (brief.includes("概览") && brief.includes("视频") && brief.includes("音频")) {
+        isBriefContainsInfo = true;
+    }
+    if (brief.includes("nfo信息")) {
+        isBriefContainsInfo = true;
+    }
+    if (brief.includes("release date") && brief.includes("source")) {
+        isBriefContainsInfo = true;
+    }
+    if (brief.includes("release.name") || brief.includes("release.size")) {
+        isBriefContainsInfo = true;
+    }
+    if ((brief.includes("文件名") || brief.includes("文件名称")) && (brief.includes("体　积")||brief.includes("体　　积"))) {
+        isBriefContainsInfo = true;
+    }
+    if (brief.includes("source type") || brief.includes("video bitrate")) {
+        isBriefContainsInfo = true;
+    } */
 
   var isBriefContainsForbidReseed = false; //是否包含禁止转载
   if (brief.includes('禁止转载')) {
@@ -220,7 +218,6 @@
     .trim();
   title = title.replace(/剩余时间.*/g, '').trim();
   title = title.replace('(禁止)', '').trim();
-  // console.log(title);
   var title_lowercase = title.toLowerCase();
 
   var officialSeed = 0; //官组种子
@@ -234,24 +231,19 @@
     title.includes('Loong@QingWa')
   ) {
     officialSeed = 1;
-    //console.log("官种");
   }
   // 预留，不影响判断
   if (title_lowercase.includes('frogmus')) {
     officialMusicSeed = 1;
-    //console.log("音乐官种");
   }
   // 预留，不影响判断
   if (title_lowercase.includes('goddramas')) {
     godDramaSeed = 1;
-    //console.log("短剧种");
   }
   if (title_lowercase.includes('vcb-studio')) {
     isVCBStudio = 1;
-    //console.log("VCB-Studio种");
   }
 
-  // console.log("title_lowercase:"+title_lowercase);
   var title_type,
     title_encode,
     title_audio,
@@ -269,34 +261,39 @@
   let title_AVC = title.includes(' AVC');
   let title_10bit = title.includes('10bit');
 
-  let title_resolution_pos = title.search(/\b((2160|1080|720|576|480)[pi])/i);
+  let title_resolution_pos = title.search(/\b((4320|2160|1080|720|576|480)[pi])/i);
   let title_source_pos = title.search(
-    /BLU-?RAY|Blu-?[Rr]ay|WEB[- ]?DL|Remux|REMUX|(BD|DVD|WEB)[Rr]ip|BDMV|\bBD\b|\bDVD[5|9]?\b|\bU?HDTV/
+    /BLU-?RAY|MiniBD|Blu-?[Rr]ay|WEB[- ]?DL|Remux|REMUX|(BD|DVD|WEB)[Rr]ip|BDMV|\bBD\b|\bDVD[5|9]?\b|\bU?HDTV/
   );
-  let title_HDR_pos = title.search(/\b(DV|DoVi|HDR|HLG)/);
-  let title_video_pos = title.search(/\b(HEVC|AVC|AV1|VP9|VC-1|MPEG-?[24]|(H\.?|x)26[45])/);
+  let title_HDR_pos = title.search(/\b(DV|DoVi|HDR|HLG|HDR10+)\b/i);
+  let title_video_pos = title.search(/\b(AVS3|HEVC|AVC|AV1|VP9|VC-1|MPEG-?[24]|(H\.?|x)26[45])/);
   let title_audio_pos = title
     .replace('WAVVE', 'WAAAE')
-    .search(/\b(AAC|(E-?)?AC3|\bDD|TrueHD|DTS|FLAC|LPCM|OPUS|WAV|MP[123]|M4A|APE)/);
+    .search(/\b(AAC|(E-?)?AC3|\bDD|TrueHD|DTS|FLAC|USAC|LPCM|OPUS|MPEG|WAV|MP[123]|M4A|APE|AV3A)/);
   let title_area_pos = title.search(/\b(CAN|ITA|USA|JPN|HKG|TWN|EUR|GRE|FRA|GBR|AUS|IND|NOR)/);
 
   let title_ES = find_season_episod(title);
   let title_encode_system = title.match(/\b(NTSC|PAL)/);
 
   let title_audio_complete = title.match(
-    /\b(DD[P\+]?|FLAC|LPCM|AC3|MP[123]|OPUS|DTS([: -]?X|-?HD ?(M|HR)A)?) ?(\d[ \.]?\d)?/
+    /\b(DD[P\+]?|FLAC|LPCM|AC3|AV3A|OPUS|TrueHD|DTS([: -]?X|-?HD ?(M|HR)A)?) ?(\d[ \.]?\d)?/
   );
   let title_AC3 = title.includes(' AC3');
   let title_HQ = title.includes(' HQ');
-  let title_60FPS = title.includes(' 60FPS');
+  let title_FPS = title.match(/\s\d{2,3}FPS\s/i);
   let title_EDR = title.includes(' EDR');
   let title_4K = title.includes(' 4K');
+  let title_SDR = title.includes(' SDR');
 
   // 媒介
   if (title_lowercase.includes('web-dl') || title_lowercase.includes('webdl')) {
     title_type = 7;
   } else if (title_lowercase.includes('remux')) {
     title_type = 9;
+  } else if (title_lowercase.includes('hdtv')) {
+    title_type = 4;
+  } else if (title_lowercase.includes('minibd')) {
+    title_type = 11;
   } else if (
     (title_lowercase.includes('blu-ray') || title_lowercase.includes('bluray')) &&
     !(
@@ -319,8 +316,6 @@
     title_type = 1;
   } else if (title_lowercase.includes('blu-ray') || title_lowercase.includes('bluray')) {
     title_type = 8;
-  } else if (title_lowercase.includes('hdtv')) {
-    title_type = 4;
   } else if (title.includes(' DVD')) {
     title_type = 2;
   } else if (title_lowercase.includes('cd')) {
@@ -328,7 +323,6 @@
   } else if (title_lowercase.includes('track')) {
     title_type = 5;
   }
-
   // 视频编码
   if (title_lowercase.includes('264') || title_lowercase.includes('avc')) {
     title_encode = 1;
@@ -345,7 +339,6 @@
   } else if (title_lowercase.includes('vp9') || title_lowercase.includes('vp-9')) {
     title_encode = 8;
   }
-  //console.log("title_encode:"+title_encode);
 
   // 音频 可能有多个音频，选择与标题不一致，跳过
   if (title.includes('FLAC')) {
@@ -356,6 +349,8 @@
     title_audio = 16;
   } else if (title.includes(' DD') || title.includes(' AC3')) {
     title_audio = 15;
+  } else if (title_lowercase.includes(' hra ')) {
+    title_audio = 3;
   } else if (title_lowercase.includes('truehd') && title_lowercase.includes('atmos')) {
     title_audio = 11;
   } else if (title_lowercase.includes('dts-hd') || title_lowercase.includes('dts hd')) {
@@ -371,7 +366,7 @@
     title_audio = 12;
   } else if (title.includes(' DTS')) {
     title_audio = 14;
-  } else if (title.includes('AAC')) {
+  } else if (title.includes('AAC') || title.includes('USAC')) {
     title_audio = 17;
   } else if (title_lowercase.includes('ape')) {
     title_audio = 18;
@@ -383,8 +378,9 @@
     title_audio = 8;
   } else if (title.includes(' OPUS')) {
     title_audio = 20;
+  } else if (title.includes(' AV3A')) {
+    title_audio = 22;
   }
-
   // 分辨率
   if (title_lowercase.includes('1080p')) {
     title_resolution = 1;
@@ -415,7 +411,6 @@
 
   if (title_lowercase.match(/s\d+e\d+/i) || title_lowercase.match(/ep\d+/i)) {
     title_is_episode = true;
-    console.log('===============================当前为分集');
   }
 
   if (title_lowercase.includes('x265')) {
@@ -467,7 +462,7 @@
   var isDV = false;
   var isHDR = false;
   var isHDR10P = false;
-  var isDIY = title.match(/(BHYS|sGnb|SPM|D[Ii]Y)@/);
+  var isDIY = title.match(/(-|@)(BHYS|sGnb|SPM|HDSky|HDHome|D[Ii]Y)/);
 
   var tdlist = $('#outer').find('td');
   for (var i = 0; i < tdlist.length; i++) {
@@ -486,30 +481,23 @@
 
     if (td.text() == '标签') {
       var text = td.parent().children().last().text();
-      //console.log('标签: '+text);
       if (text.includes('禁转')) {
         isReseedProhibited = true;
-        // console.log("已选择禁转标签");
       }
       if (text.includes('官方')) {
         isOfficialSeedLabel = true;
-        // console.log("已选择官方标签");
       }
       if (text.includes('国语')) {
         isTagAudioMandarin = true;
-        // console.log("已选择国语标签");
       }
       if (text.includes('粤语')) {
         isTagAudioCantonese = true;
-        // console.log("已选择粤语标签");
       }
       if (text.includes('中字')) {
         isTagTextChinese = true;
-        // console.log("已选择中字标签");
       }
       if (text.includes('VCB-Studio')) {
         isTagVCBStudio = true;
-        // console.log("已选择VCB-Studio标签");
       }
       if (text.indexOf('完结') >= 0) {
         isTagComplete = true;
@@ -525,46 +513,36 @@
 
       if (text.includes('驻站')) {
         isTagResident = true;
-        // console.log("已选择驻站标签");
       }
 
       if (text.includes('DIY')) {
         isTagDIY = true;
-        // console.log("已选择DIY标签");
       }
       if (text.includes('原生原盘')) {
         isTagUNTOUCHED = true;
-        // console.log("已选择原生原盘标签");
       }
       if (text.includes('Remux')) {
         isTagREMUX = true;
-        // console.log("已选择Remux标签");
       }
 
       if (text.includes('杜比视界')) {
         isTagDV = true;
-        // console.log("已选择杜比视界标签");
       }
       if ((!text.includes('HDR10+') && text.includes('HDR')) || text.match(/HDR[^1]/)) {
         isTagHDR = true;
-        // console.log("已选择HDR10标签");
       }
       if (text.includes('HDR10+')) {
         isTagHDR10P = true;
-        // console.log("已选择HDR10+标签");
       }
     }
 
     if (td.text() == '基本信息') {
       var text = td.parent().children().last().text();
-      //console.log("类型:", text);
       if (text.includes('制作组')) {
         isGroupSelected = true;
-        //console.log("已选择制作组");
       }
       if (text.includes('TB')) {
         isBiggerThan1T = true;
-        //console.log("种子体积大于1T");
       }
       // 类型
       Object.keys(cat_constant).some((key) => {
@@ -573,7 +551,6 @@
           return true;
         }
       });
-      //console.log("cat:", cat, cat_constant[cat]);
 
       // 媒介
       Object.keys(type_constant).some((key) => {
@@ -582,7 +559,6 @@
           return true;
         }
       });
-      //console.log("type:", type, type_constant[type]);
 
       // 编码
       let text_no_audio = text.replace(/音频编码/, 'AUDIO');
@@ -592,7 +568,6 @@
           return true;
         }
       });
-      //console.log("encode:", encode, encode_constant[encode]);
 
       // 音频编码
       Object.keys(audio_constant).some((key) => {
@@ -601,8 +576,6 @@
           return true;
         }
       });
-      //console.log("audio:", audio, audio_constant[audio]);
-
       // 分辨率
       Object.keys(resolution_constant).some((key) => {
         if (text.indexOf('分辨率: ' + resolution_constant[key]) >= 0) {
@@ -621,7 +594,6 @@
       ) {
         resolution = 4;
       }
-      //console.log("resolution:", resolution, resolution_constant[resolution]);
 
       // 制作组
       Object.keys(group_constant).some((key) => {
@@ -630,7 +602,6 @@
           return true;
         }
       });
-      //console.log("category:", category, group_constant[category]);
     }
 
     if (td.text() == '副标题' || td.text() == '副標題') {
@@ -645,24 +616,20 @@
       poster = $('#kposter').children().attr('src');
     }
     /* if (td.text().trim() == "IMDb信息") {
-              if (td.parent().last().find("a").text() == "这里"){
-                  var fullUrl = new URL(href, window.location.origin).toString();
-                  td.parent().find("a").attr("href",fullUrl);
-                  let href = td.parent().last().find("a").attr("href").trim();
-                  td.parent().last().find("a").click();
-              }
-          }*/
+            if (td.parent().last().find("a").text() == "这里"){
+                var fullUrl = new URL(href, window.location.origin).toString();
+                td.parent().find("a").attr("href",fullUrl);
+                let href = td.parent().last().find("a").attr("href").trim();
+                td.parent().last().find("a").click();
+            }
+        }*/
     if (td.text() == 'MediaInfo') {
       //$(this).find("")
       let md = td.parent().children().last();
       if (md == undefined || md.text().trim() == '') {
         isMediainfoEmpty = true;
-        //console.log("MediaInfo栏为空");
       }
       mi_type = find_info(md.text());
-      //console.log(md.text())
-      //console.log(md.children('div').length)
-      //console.log(md.children('table').length)
       if (md.children('div').length > 0) {
         mediainfo_short = md.text().replace(/\s+/g, '');
         mediainfo = md.text().replace(/\s+/g, '');
@@ -678,11 +645,9 @@
       }
 
       // 根据 Mediainfo 判断标签选择
-      //console.log("===========================mediainfo:"+mediainfo);
       const audioMatch = mediainfo.matchAll(/Audio.*?Language:(\w+)/g) || [];
       for (let audioOne of audioMatch) {
         //const audioLanguage = audioOne.match(/Language:(\w+)/)[1];
-        // console.log(`The languages of the Audio are: ${audioLanguage}`);
         const audioLanguage = audioOne[1];
         if (audioOne[0].includes('Text')) {
           continue;
@@ -711,7 +676,6 @@
         return match ? match[1] : 'Not found';
       });
       var textLanguage = textLanguages.join(',');
-      // console.log(`The languages of the text are: ${textLanguage}`);
       if (textLanguage.includes('Chinese')) {
         isTextChinese = true;
       }
@@ -725,17 +689,13 @@
         mi_x265 = true;
       }
       // alert(isAudioChinese.toString() + isTextChinese.toString() + isTextEnglish.toString());
-      if (mediainfo.includes('dvhe.') || mediainfo.includes('Dolby Vision')) {
+      if (md.text().includes('dvhe.') || md.text().includes('Dolby Vision')) {
         isDV = true;
       }
-      if (
-        mediainfo.includes('SMPTE ST 2086') ||
-        mediainfo.includes('HDR10w') ||
-        mediainfo.includes('HLG')
-      ) {
-        isHDR = true;
-      }
-      if (mediainfo.includes('SMPTE ST 2094') || mediainfo.includes('HDR10+')) {
+      const mediaintext = md.text();
+      isHDR = /\bHDR Vivid\b|\bBT.2020\b|SMPTE ST 2086/i.test(mediaintext);
+
+      if (md.text().includes('SMPTE ST 2094') || mediainfo.includes('HDR10+')) {
         isHDR10P = true;
         isHDR = true;
       }
@@ -752,12 +712,11 @@
 
   let imdbUrl = $('#kimdb a').attr('href');
   /* if (imdbText.indexOf('douban') >= 0) {
-          douban = $(element).attr('title');
-      } */
-  // console.log(imdbUrl)
+        douban = $(element).attr('title');
+    } */
   /* if (imdbText.indexOf('imdb') >= 0) {
-          imdb = $(element).attr('title');
-      } */
+        imdb = $(element).attr('title');
+    } */
 
   var screenshot = '';
   var pngCount = 0;
@@ -804,13 +763,14 @@
       );
   }
 
-  $('#assistant-tooltips').append('【错误】: ');
-  $('#assistant-tooltips-warning').append('【警告】: ');
+  $('#assistant-tooltips').append('');
+  $('#assistant-tooltips-warning').append('');
 
   /* if (/\s+/.test(title)) {
-          $('#assistant-tooltips').append('主标题包含空格<br/>');
-          error = true;
-      } */
+        $('#assistant-tooltips').append('主标题包含空格<br/>');
+        error = true;
+    } */
+
   if (/[\u4e00-\u9fa5\uff01-\uff60]+/.test(title)) {
     $('#assistant-tooltips').append('主标题包含中文或中文字符<br/>');
     error = true;
@@ -831,11 +791,31 @@
     $('#assistant-tooltips').append('标题：HDR10 需要改为 HDR<br/>');
     error = true;
   }
-  if (type == 7 && /\s(HEVC|H265)\s/.test(title)) {
+  if (isTagHDR10P && !/(^|\s)HDR10\+\s/.test(title)) {
+    $('#assistant-tooltips').append('标题：HDR类型 缺少/错误<br/>');
+    error = true;
+  }
+  if (isTagHDR && !isTagHDR10P && !/(^|\s)(HDR|HDR10\+)(\s|$)/.test(title)) {
+    $('#assistant-tooltips').append('标题：HDR类型 缺少/错误<br/>');
+    error = true;
+  }
+  if (type == 7 && /\s(HEVC|H265)\s/i.test(title)) {
     $('#assistant-tooltips').append('标题：WEB 资源, HEVC 或 H265 应改为 H.265<br/>');
     error = true;
   }
-  if (type == 7 && /\s(AVC|H264)\s/.test(title)) {
+  if (cat == 401 && /\bS\d{2}(?:E\d{2}(?:-\d{2}|E\d{2})*)?\b/gi.test(title)) {
+    $('#assistant-tooltips').append(
+      '经脚本检查标题包含 <b>S**E**</b>，但选择了电影类别，请再次确认<br/>'
+    );
+    error = true;
+  }
+  if (cat == 402 && !/\bS\d{2}(?:E\d{2}(?:-\d{2}|E\d{2})*)?\b/gi.test(title)) {
+    $('#assistant-tooltips').append(
+      '选择了剧集类别，但是经脚本检查标题未包含 <b>S**E**</b>，请再次确认<br/>'
+    );
+    error = true;
+  }
+  if (type == 7 && /\s(AVC|H264)\s/i.test(title)) {
     $('#assistant-tooltips').append('标题：WEB 资源, AVC 或 H264 应改为 H.264<br/>');
     error = true;
   }
@@ -848,14 +828,17 @@
     error = true;
   }
   if (
-    /(-|@)(FGT|NSBC|BATWEB|GPTHD|DreamHD|BlackTV|CatWEB|Xiaomi|Huawei|MOMOWEB|DDHDTV|SeeWeb|TagWeb|SonyHD|MiniHD|BitsTV|ALT|NukeHD|ZeroTV|HotTV|EntTV|GameHD|SmY|SeeHD|VeryPSP|DWR|XLMV|XJCTV|Mp4Ba)/i.test(
+    /(-|@)(FGT|NSBC|BATWEB|GPTHD|DreamHD|BlackTV|CatWEB|Xiaomi|Huawei|MOMOWEB|DDHDTV|SeeWeb|TagWeb|SonyHD|MiniHD|BitsTV|ALT|LelveTV|NukeHD|ZeroTV|HotTV|EntTV|GameHD|SmY|SeeHD|ParkHD|VeryPSP|DWR|XLMV|XJCTV|Mp4Ba|Huluwa)/i.test(
       title
     )
   ) {
     $('#assistant-tooltips').append('主标题包含禁发小组，请检查<br/>');
     error = true;
   }
-
+  if (/(-|@)(CTRLHD)/.test(title)) {
+    $('#assistant-tooltips').append('主标题包含禁发小组，请检查<br/>');
+    error = true;
+  }
   if (!subtitle) {
     $('#assistant-tooltips').append('副标题为空<br/>');
     error = true;
@@ -868,7 +851,6 @@
     $('#assistant-tooltips').append('未选择媒介<br/>');
     error = true;
   } else {
-    // console.log("标题检测格式为" + type_constant[title_type] + "，选择格式为" + type_constant[type]);
     if (title_type && title_type !== type) {
       $('#assistant-tooltips').append(
         '标题检测媒介为' +
@@ -885,7 +867,6 @@
     error = true;
   } else {
     if (title_encode && title_encode !== encode) {
-      // console.log("标题检测视频编码为" + encode_constant[title_encode] + "，选择视频编码为" + encode_constant[encode]);
       $('#assistant-tooltips').append(
         '标题检测视频编码为' +
           encode_constant[title_encode] +
@@ -901,7 +882,6 @@
     error = true;
   } else {
     if (title_audio && title_audio !== audio) {
-      // console.log("标题检测音频编码为" + audio_constant[title_audio] + "，选择音频编码为" + audio_constant[audio]);
       // $('#assistant-tooltips-warning').append("标题检测音频编码为" + audio_constant[title_audio] + "，选择音频编码为" + audio_constant[audio] + '<br/>');
       // warning = true;
       $('#assistant-tooltips').append(
@@ -933,7 +913,14 @@
     $('#assistant-tooltips').append('标题：分辨率 P 应改为 p<br/>');
     error = true;
   }
-
+  if (/atmos.*truehd/.test(title_lowercase)) {
+    $('#assistant-tooltips').append('标题：Atmos 应置于 声道 之后<br/>');
+    error = true;
+  }
+  if (/(avc|hevc|h\.265|h\.264|x265|x264).*(bluray|blu-ray|web-dl|remux)/.test(title_lowercase)) {
+    $('#assistant-tooltips').append('标题：片源类型与规格应置于视频编码前面<br/>');
+    error = true;
+  }
   if (title_resolution_pos == -1) {
     if (title_type == 2 || title_type == 9) {
       if (!title_encode_system) {
@@ -953,7 +940,7 @@
 
   if (title_resolution_pos != -1 && title_source_pos != -1) {
     if (title_resolution_pos > title_source_pos) {
-      $('#assistant-tooltips').append('标题中分辨率在来源/媒介后<br/>');
+      $('#assistant-tooltips').append('将标题中的分辨率置于来源/媒介前<br/>');
       error = true;
     }
   }
@@ -969,23 +956,27 @@
   }
 
   if (title_AC3) {
-    $('#assistant-tooltips').append('AC3改为DD<br/>');
+    $('#assistant-tooltips').append('AC3改为 DD<br/>');
     error = true;
   }
   if (title_HQ) {
-    $('#assistant-tooltips').append('删除标题中的HQ<br/>');
+    $('#assistant-tooltips').append('删除标题中的 HQ<br/>');
     error = true;
   }
-  if (title_60FPS) {
-    $('#assistant-tooltips').append('删除标题中的60FPS<br/>');
+  if (title_FPS) {
+    $('#assistant-tooltips').append('删除标题中的 FPS<br/>');
     error = true;
   }
   if (title_EDR) {
-    $('#assistant-tooltips').append('删除标题中的EDR<br/>');
+    $('#assistant-tooltips').append('删除标题中的 EDR<br/>');
+    error = true;
+  }
+  if (title_SDR) {
+    $('#assistant-tooltips').append('删除标题中的 SDR<br/>');
     error = true;
   }
   if (title_4K) {
-    $('#assistant-tooltips').append('4K改为2160p,<br/>');
+    $('#assistant-tooltips').append('4K 改为 2160p,<br/>');
     error = true;
   }
 
@@ -998,21 +989,21 @@
 
   if (title_video_pos != -1 && title_audio_pos != -1) {
     if (title_video_pos > title_audio_pos) {
-      $('#assistant-tooltips').append('将标题中的视频编码放到音频编码前面<br/>');
+      $('#assistant-tooltips').append('将标题中的视频编码置于音频编码前面<br/>');
       error = true;
     }
     if (title_HDR_pos > title_video_pos) {
-      $('#assistant-tooltips').append('将标题中的HDR类型放到视频编码前面<br/>');
+      $('#assistant-tooltips').append('将标题中的HDR类型置于视频编码前面<br/>');
       error = true;
     }
     if (title_HDR_pos > title_audio_pos) {
-      $('#assistant-tooltips').append('将标题中的HDR类型放到视频编码前面<br/>');
+      $('#assistant-tooltips').append('将标题中的HDR类型置于视频编码前面<br/>');
       error = true;
     }
   }
 
   if (title_type == type) {
-    if (title_type == 1 || title_type == 8) {
+    if (title_type == 1 || title_type == 8 || title_type == 11) {
       if (title_wrongBD) {
         $('#assistant-tooltips').append(`标题中${title_wrongBD}应为Blu-ray<br/>`);
         error = true;
@@ -1026,25 +1017,23 @@
         var TagError = false;
         if (isDIY) {
           if (!isTagDIY) {
-            $('#assistant-tooltips').append('未选择DIY标签 ');
+            $('#assistant-tooltips').append(`未选择DIY标签<br/>`);
             TagError = true;
           }
           if (isTagUNTOUCHED) {
-            $('#assistant-tooltips').append('不应选择原生原盘标签 ');
-            TagError = true;
-          }
-        } else {
-          if (!isTagUNTOUCHED) {
-            $('#assistant-tooltips').append('未选择原生原盘标签 ');
-            TagError = true;
-          }
-          if (isTagDIY) {
-            $('#assistant-tooltips').append('不应选择DIY标签 ');
+            $('#assistant-tooltips').append(`不应选择原生原盘标签<br/>`);
             TagError = true;
           }
         }
+        if (!isTagDIY && !isTagUNTOUCHED) {
+          $('#assistant-tooltips').append(`Blu-ray 类型，未选择 原生 或 DIY 标签<br/>`);
+          TagError = true;
+        }
+        if (isTagDIY && isTagUNTOUCHED) {
+          $('#assistant-tooltips').append(`原生 或 DIY 标签只能使用一个<br/>`);
+          TagError = true;
+        }
         if (TagError) {
-          $('#assistant-tooltips').append('<br/>');
           error = true;
         }
       }
@@ -1091,7 +1080,9 @@
   }
 
   if (title_ES == 0 && !isTagIncomplete) {
-    $('#assistant-tooltips').append('请添加分集标签<br/>');
+    $('#assistant-tooltips').append(
+      '未完结剧集请添加分集标签，如果无法勾选，请前往站点首页公告处查看并申请分集标签权限或举报删除<br/>'
+    );
     error = true;
   }
 
@@ -1126,17 +1117,17 @@
 
   //呵呵 短剧没谈拢...
   /*if (godDramaSeed && !isReseedProhibited && isBriefContainsForbidReseed) {
-          $('#assistant-tooltips').append('未选择禁转标签<br/>');
-          error = true;
-      }
-      if (godDramaSeed && cat !== 412) {
-          $('#assistant-tooltips').append('未选择短剧类型<br/>');
-          error = true;
-      }
-      if (godDramaSeed && !isTagResident) {
-          $('#assistant-tooltips').append('未选择驻站标签<br/>');
-          error = true;
-      }*/
+        $('#assistant-tooltips').append('未选择禁转标签<br/>');
+        error = true;
+    }
+    if (godDramaSeed && cat !== 412) {
+        $('#assistant-tooltips').append('未选择短剧类型<br/>');
+        error = true;
+    }
+    if (godDramaSeed && !isTagResident) {
+        $('#assistant-tooltips').append('未选择驻站标签<br/>');
+        error = true;
+    }*/
 
   if (!officialSeed && isOfficialSeedLabel) {
     $('#assistant-tooltips').append('非官种不可选择官方标签<br/>');
@@ -1173,16 +1164,24 @@
     error = true;
   }
 
-  if (isHDR && !isTagHDR) {
-    $('#assistant-tooltips').append('未选择HDR标签<br/>');
+  if ((isHDR || isHDR10P) && !isTagHDR) {
+    $('#assistant-tooltips').append('未选择 HDR 标签<br/>');
     error = true;
   }
-  if (isHDR10P && !isTagHDR) {
-    $('#assistant-tooltips').append('未选择HDR10+标签<br/>');
+  if (!(isHDR || isHDR10P) && isTagHDR) {
+    $('#assistant-tooltips').append('选择 HDR 标签，未识别到 HDR<br/>');
     error = true;
   }
   if (isHDR10P && !isTagHDR10P) {
-    $('#assistant-tooltips').append('未选择HDR10+标签<br/>');
+    $('#assistant-tooltips').append('未选择 HDR10+ 标签<br/>');
+    error = true;
+  }
+  if (!isHDR10P && isTagHDR10P) {
+    $('#assistant-tooltips').append('选择 HDR10+ 标签，未识别到 HDR10+ <br/>');
+    error = true;
+  }
+  if (!isDV && isTagDV) {
+    $('#assistant-tooltips').append('选择 杜比视界 标签，未识别到 杜比视界<br/>');
     error = true;
   }
   if (isDV && !isTagDV) {
@@ -1249,13 +1248,13 @@
   }
 
   /*$('#kdescr img').each(function(index, element) {
-          $(element).on('error', function (e) {
-              warning = true;
-              var src = $(e.target).attr('src');
-              $('#assistant-tooltips-warning').append('异常图片：<a href=' + src + ' target="_blank">' + src + "</a><br/>");
-              $('#assistant-tooltips-warning').show();
-          });
-      });*/
+        $(element).on('error', function (e) {
+            warning = true;
+            var src = $(e.target).attr('src');
+            $('#assistant-tooltips-warning').append('异常图片：<a href=' + src + ' target="_blank">' + src + "</a><br/>");
+            $('#assistant-tooltips-warning').show();
+        });
+    });*/
 
   var startTime = new Date().getTime();
   var intervalId = setInterval(function () {
@@ -1322,7 +1321,6 @@
   //            if (td.text() == '行为') {
   //                var elements = td.parent().children().last();
   //                elements.contents().each(function() {
-  //                    // console.log(this.textContent);
   //                    if (isFoundReviewLink) {
   //                        $(this).before(' | <a href="javascript:;" id="approvelink" class="small"><b><font><svg t="1655224943277" class="icon" viewBox="0 0 1397 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="45530" width="16" height="16"><path d="M1396.363636 121.018182c0 0-223.418182 74.472727-484.072727 372.363636-242.036364 269.963636-297.890909 381.672727-390.981818 530.618182C512 1014.690909 372.363636 744.727273 0 549.236364l195.490909-186.181818c0 0 176.872727 121.018182 297.890909 344.436364 0 0 307.2-474.763636 902.981818-707.490909L1396.363636 121.018182 1396.363636 121.018182zM1396.363636 121.018182" p-id="45531" fill="#8BC34A"></path></svg><svg t="1655224943277" class="icon" viewBox="0 0 1397 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="45530" width="16" height="16"><path d="M1396.363636 121.018182c0 0-223.418182 74.472727-484.072727 372.363636-242.036364 269.963636-297.890909 381.672727-390.981818 530.618182C512 1014.690909 372.363636 744.727273 0 549.236364l195.490909-186.181818c0 0 176.872727 121.018182 297.890909 344.436364 0 0 307.2-474.763636 902.981818-707.490909L1396.363636 121.018182 1396.363636 121.018182zM1396.363636 121.018182" p-id="45531" fill="#8BC34A"></path></svg>&nbsp;一键通过</font></b></a>'); // Add new hyperlink and separator
   //                        $('#addcuruser').after(' | <a href="javascript:;" id="approvelink_foot" class="small"><b><font><svg t="1655224943277" class="icon" viewBox="0 0 1397 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="45530" width="16" height="16"><path d="M1396.363636 121.018182c0 0-223.418182 74.472727-484.072727 372.363636-242.036364 269.963636-297.890909 381.672727-390.981818 530.618182C512 1014.690909 372.363636 744.727273 0 549.236364l195.490909-186.181818c0 0 176.872727 121.018182 297.890909 344.436364 0 0 307.2-474.763636 902.981818-707.490909L1396.363636 121.018182 1396.363636 121.018182zM1396.363636 121.018182" p-id="45531" fill="#8BC34A"></path></svg><svg t="1655224943277" class="icon" viewBox="0 0 1397 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="45530" width="16" height="16"><path d="M1396.363636 121.018182c0 0-223.418182 74.472727-484.072727 372.363636-242.036364 269.963636-297.890909 381.672727-390.981818 530.618182C512 1014.690909 372.363636 744.727273 0 549.236364l195.490909-186.181818c0 0 176.872727 121.018182 297.890909 344.436364 0 0 307.2-474.763636 902.981818-707.490909L1396.363636 121.018182 1396.363636 121.018182zM1396.363636 121.018182" p-id="45531" fill="#8BC34A"></path></svg>&nbsp;一键通过</font></b></a>'); // Add new hyperlink and separator
@@ -1419,7 +1417,6 @@
   //                    }
   //
   //                    if (this.textContent.includes('审核')) { // Check for text nodes containing the separator
-  //                        // console.log("找到审核按钮");
   //                        isFoundReviewLink = true;
   //                    }
   //                });
@@ -1430,7 +1427,6 @@
   //     $('#assistant-tooltips').click(function(){
   //         if (error && isFoundReviewLink) {
   //             GM_setValue('autoFillErrorInfo', true);
-  //             // console.log("errorinfo_before:"+$("#approval-comment").html());
   //             GM_setValue('errorInfo', document.getElementById('assistant-tooltips').innerHTML);
   //             // 找到并点击指定按钮
   //             var specifiedButton = document.querySelector('#approval'); // 替换为实际的按钮选择器
@@ -1443,13 +1439,13 @@
   //     });
 
   // 主页面操作
-  if (/https:\/\/.*\.qingwapt\.com\/details\.php\?id=.*/.test(window.location.href)) {
-    addApproveLink();
-    //console.log("autoFillErrorInfo:"+GM_getValue('autoFillErrorInfo'));
-    //console.log("autoCheckAndConfirm:"+GM_getValue('autoCheckAndConfirm'));
+  if (
+    /https:\/\/(.*\.)?(qingwapt\.(com|org)|qingwa\.pro)\/details\.php\?id=.*/.test(
+      window.location.href
+    )
+  ) {
     if (biggerbutton) {
       if (!error && isFoundReviewLink) {
-        // console.log("此种子未检测到错误");
         document.querySelector('#approvelink').style.fontSize = biggerbuttonsize;
         document.querySelector('#approvelink_foot').style.fontSize = biggerbuttonsize;
       } else if (error && isFoundReviewLink) {
@@ -1468,14 +1464,12 @@
 
   // 弹出页的操作
   if (
-    /https:\/\/.*\.qingwapt\.com\/web\/torrent-approval-page\?torrent_id=.*/.test(
+    /https:\/\/(.*\.)?(qingwapt\.(com|org)|qingwa\.pro)\/web\/torrent-approval-page\?torrent_id=.*/.test(
       window.location.href
     )
   ) {
     // 使用延迟来等待页面可能的异步加载
     setTimeout(function () {
-      //console.log("autoFillErrorInfo:"+GM_getValue('autoFillErrorInfo'));
-      //console.log("autoCheckAndConfirm:"+GM_getValue('autoCheckAndConfirm'));
       if (GM_getValue('autoCheckAndConfirm', false)) {
         var radioPassButton = document
           .querySelector(
@@ -1506,7 +1500,6 @@
           radioDenyButton.checked = true;
         }
         var errorInfo = GM_getValue('errorInfo', '');
-        // console.log("errorInfo: "+errorInfo);
         errorInfo = errorInfo.replace('【错误】: ', '');
         errorInfo = errorInfo.replace(
           'MediaInfo中含有bbcode',
@@ -1519,7 +1512,6 @@
         );
         errorInfo = errorInfo.replace('简介中未检测到IMDb或豆瓣链接', '请补充imdb/豆瓣链接');
         errorInfo = errorInfo.replace('副标题为空', '请补充副标题');
-        // console.log("errorInfo: "+errorInfo);
         $('#approval-comment').text(errorInfo);
 
         // 完成操作后，清除标记
@@ -1605,9 +1597,6 @@
   //         });
   //     }
 
-  //console.log("============================error:"+error+"isFoundReviewLink:"+isFoundReviewLink);
-  //console.log("============================autoFillErrorInfo:"+GM_getValue('autoFillErrorInfo')+"errorInfo:"+GM_getValue('errorInfo'));
-
   if (!isWaitImgLoad) {
     if (error) {
       $('#assistant-tooltips').css('background', '#EA2027');
@@ -1628,5 +1617,4 @@
     $('#assistant-tooltips-warning').hide();
   }
   // $('#assistant-tooltips-warning').hide();
-  // console.log("warning:"+warning);
 })();
