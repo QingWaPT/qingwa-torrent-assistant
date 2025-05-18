@@ -8,7 +8,9 @@ dev/xxx -> main
 
 ## 发布地址
 
-[greasyfork](https://greasyfork.org/zh-CN/scripts/490095-qingwa-torrent-assistant)
+[greasyfork - production](https://greasyfork.org/zh-CN/scripts/490095-qingwa-torrent-assistant)
+
+[greasyfork - testing](https://greasyfork.org/zh-CN/scripts/536408-qingwa-torrent-assistant-test)
 
 ## 特别鸣谢
 
