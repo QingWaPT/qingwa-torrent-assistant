@@ -27,7 +27,6 @@
 
   // 自定义参数
   var review_info_position = 3; // 错误提示信息位置：1:页面最上方，2:主标题正下方，3:主标题正上方
-  //   var fontsize = "9pt";          // 一键通过按钮的字体大小
   var timeout = 200; // 弹出页内鼠标点击间隔，单位毫秒，设置越小点击越快，但是对网络要求更高
   var biggerbuttonsize = '40pt'; // 放大的按钮大小
   var autoback = 0; // 一键通过后返回上一页面
@@ -178,27 +177,6 @@
   ) {
     isBriefContainsInfo = true;
   }
-  //错误info信息
-  /*
-    // 中文详细info
-    if (brief.includes("概览") && brief.includes("视频") && brief.includes("音频")) {
-        isBriefContainsInfo = true;
-    }
-    if (brief.includes("nfo信息")) {
-        isBriefContainsInfo = true;
-    }
-    if (brief.includes("release date") && brief.includes("source")) {
-        isBriefContainsInfo = true;
-    }
-    if (brief.includes("release.name") || brief.includes("release.size")) {
-        isBriefContainsInfo = true;
-    }
-    if ((brief.includes("文件名") || brief.includes("文件名称")) && (brief.includes("体　积")||brief.includes("体　　积"))) {
-        isBriefContainsInfo = true;
-    }
-    if (brief.includes("source type") || brief.includes("video bitrate")) {
-        isBriefContainsInfo = true;
-    } */
 
   var isBriefContainsForbidReseed = false; //是否包含禁止转载
   if (brief.includes('禁止转载')) {
@@ -206,10 +184,6 @@
   }
 
   var title = $('#top').text();
-  var exclusive = 0;
-  if (title.indexOf('禁转') >= 0) {
-    exclusive = 1;
-  }
   title = title
     .replace(
       /禁转|\((已审|冻结|待定)\)|\[(免费|50%|2X免费|30%|2X 50%)\]|\(限时\d+.*\)|\[2X\]|\[(推荐|热门|经典|已审)\]/g,
@@ -615,14 +589,6 @@
     if (td.text().trim() == '海报') {
       poster = $('#kposter').children().attr('src');
     }
-    /* if (td.text().trim() == "IMDb信息") {
-            if (td.parent().last().find("a").text() == "这里"){
-                var fullUrl = new URL(href, window.location.origin).toString();
-                td.parent().find("a").attr("href",fullUrl);
-                let href = td.parent().last().find("a").attr("href").trim();
-                td.parent().last().find("a").click();
-            }
-        }*/
     if (td.text() == 'MediaInfo') {
       //$(this).find("")
       let md = td.parent().children().last();
@@ -647,7 +613,6 @@
       // 根据 Mediainfo 判断标签选择
       const audioMatch = mediainfo.matchAll(/Audio.*?Language:(\w+)/g) || [];
       for (let audioOne of audioMatch) {
-        //const audioLanguage = audioOne.match(/Language:(\w+)/)[1];
         const audioLanguage = audioOne[1];
         if (audioOne[0].includes('Text')) {
           continue;
@@ -710,14 +675,6 @@
     return regex.test(str);
   }
 
-  let imdbUrl = $('#kimdb a').attr('href');
-  /* if (imdbText.indexOf('douban') >= 0) {
-        douban = $(element).attr('title');
-    } */
-  /* if (imdbText.indexOf('imdb') >= 0) {
-        imdb = $(element).attr('title');
-    } */
-
   var screenshot = '';
   var pngCount = 0;
   var imgCount = 0;
@@ -765,11 +722,6 @@
 
   $('#assistant-tooltips').append('');
   $('#assistant-tooltips-warning').append('');
-
-  /* if (/\s+/.test(title)) {
-        $('#assistant-tooltips').append('主标题包含空格<br/>');
-        error = true;
-    } */
 
   if (/[\u4e00-\u9fa5\uff01-\uff60]+/.test(title)) {
     $('#assistant-tooltips').append('主标题包含中文或中文字符<br/>');
@@ -882,8 +834,6 @@
     error = true;
   } else {
     if (title_audio && title_audio !== audio) {
-      // $('#assistant-tooltips-warning').append("标题检测音频编码为" + audio_constant[title_audio] + "，选择音频编码为" + audio_constant[audio] + '<br/>');
-      // warning = true;
       $('#assistant-tooltips').append(
         '标题检测音频编码为' +
           audio_constant[title_audio] +
@@ -1096,15 +1046,6 @@
     warning = true;
   }
 
-  if (mediainfo_short === mediainfo && officialSeed == true) {
-    // $('#assistant-tooltips').append('媒体信息未解析<br/>');
-    // error = true;
-  }
-  if (mediainfo_short === mediainfo && officialSeed == false) {
-    // $('#assistant-tooltips-warning').append('媒体信息未解析<br/>');
-    // warning = true;
-  }
-
   if (mediainfo_err) {
     $('#assistant-tooltips').append(mediainfo_err).append('<br/>');
     error = true;
@@ -1114,20 +1055,6 @@
     $('#assistant-tooltips').append('未选择制作组<br/>');
     error = true;
   }
-
-  //呵呵 短剧没谈拢...
-  /*if (godDramaSeed && !isReseedProhibited && isBriefContainsForbidReseed) {
-        $('#assistant-tooltips').append('未选择禁转标签<br/>');
-        error = true;
-    }
-    if (godDramaSeed && cat !== 412) {
-        $('#assistant-tooltips').append('未选择短剧类型<br/>');
-        error = true;
-    }
-    if (godDramaSeed && !isTagResident) {
-        $('#assistant-tooltips').append('未选择驻站标签<br/>');
-        error = true;
-    }*/
 
   if (!officialSeed && isOfficialSeedLabel) {
     $('#assistant-tooltips').append('非官种不可选择官方标签<br/>');
@@ -1247,15 +1174,6 @@
     error = true;
   }
 
-  /*$('#kdescr img').each(function(index, element) {
-        $(element).on('error', function (e) {
-            warning = true;
-            var src = $(e.target).attr('src');
-            $('#assistant-tooltips-warning').append('异常图片：<a href=' + src + ' target="_blank">' + src + "</a><br/>");
-            $('#assistant-tooltips-warning').show();
-        });
-    });*/
-
   var startTime = new Date().getTime();
   var intervalId = setInterval(function () {
     var allload = true;
@@ -1309,134 +1227,6 @@
       }
     }
   }, 200);
-
-  //    var isFoundReviewLink = false; // 是否有审核按钮（仅有权限人员可一键填入错误信息）
-  //    // 添加一键通过按钮到页面
-  //    function addApproveLink() {
-  //        var tdlist = $('#outer').find('td');
-  //        var text;
-  //        for (var i = 0; i < tdlist.length; i ++) {
-  //            var td = $(tdlist[i]);
-  //
-  //            if (td.text() == '行为') {
-  //                var elements = td.parent().children().last();
-  //                elements.contents().each(function() {
-  //                    if (isFoundReviewLink) {
-  //                        $(this).before(' | <a href="javascript:;" id="approvelink" class="small"><b><font><svg t="1655224943277" class="icon" viewBox="0 0 1397 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="45530" width="16" height="16"><path d="M1396.363636 121.018182c0 0-223.418182 74.472727-484.072727 372.363636-242.036364 269.963636-297.890909 381.672727-390.981818 530.618182C512 1014.690909 372.363636 744.727273 0 549.236364l195.490909-186.181818c0 0 176.872727 121.018182 297.890909 344.436364 0 0 307.2-474.763636 902.981818-707.490909L1396.363636 121.018182 1396.363636 121.018182zM1396.363636 121.018182" p-id="45531" fill="#8BC34A"></path></svg><svg t="1655224943277" class="icon" viewBox="0 0 1397 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="45530" width="16" height="16"><path d="M1396.363636 121.018182c0 0-223.418182 74.472727-484.072727 372.363636-242.036364 269.963636-297.890909 381.672727-390.981818 530.618182C512 1014.690909 372.363636 744.727273 0 549.236364l195.490909-186.181818c0 0 176.872727 121.018182 297.890909 344.436364 0 0 307.2-474.763636 902.981818-707.490909L1396.363636 121.018182 1396.363636 121.018182zM1396.363636 121.018182" p-id="45531" fill="#8BC34A"></path></svg>&nbsp;一键通过</font></b></a>'); // Add new hyperlink and separator
-  //                        $('#addcuruser').after(' | <a href="javascript:;" id="approvelink_foot" class="small"><b><font><svg t="1655224943277" class="icon" viewBox="0 0 1397 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="45530" width="16" height="16"><path d="M1396.363636 121.018182c0 0-223.418182 74.472727-484.072727 372.363636-242.036364 269.963636-297.890909 381.672727-390.981818 530.618182C512 1014.690909 372.363636 744.727273 0 549.236364l195.490909-186.181818c0 0 176.872727 121.018182 297.890909 344.436364 0 0 307.2-474.763636 902.981818-707.490909L1396.363636 121.018182 1396.363636 121.018182zM1396.363636 121.018182" p-id="45531" fill="#8BC34A"></path></svg><svg t="1655224943277" class="icon" viewBox="0 0 1397 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="45530" width="16" height="16"><path d="M1396.363636 121.018182c0 0-223.418182 74.472727-484.072727 372.363636-242.036364 269.963636-297.890909 381.672727-390.981818 530.618182C512 1014.690909 372.363636 744.727273 0 549.236364l195.490909-186.181818c0 0 176.872727 121.018182 297.890909 344.436364 0 0 307.2-474.763636 902.981818-707.490909L1396.363636 121.018182 1396.363636 121.018182zM1396.363636 121.018182" p-id="45531" fill="#8BC34A"></path></svg>&nbsp;一键通过</font></b></a>'); // Add new hyperlink and separator
-  //
-  //                        var actionLink = document.querySelector('#approvelink');
-  //                        var approvelink_foot = document.querySelector('#approvelink_foot');
-  //                        actionLink.style.fontSize = fontsize;
-  //                        approvelink_foot.style.fontSize = fontsize;
-  //                        actionLink.addEventListener('click', function(event) {
-  //                            if (error) {
-  //                                // alert("当前种子仍有错误!");
-  //                                GM_setValue('autoFillErrorInfo', false);
-  //                                var popup = document.createElement('div');
-  ////                                popup.id = "popup";
-  ////                                popup.style.fontSize = "20pt";
-  ////                                popup.style.position = "fixed";
-  ////                                popup.style.top = "10%";
-  ////                                popup.style.left = "10%";
-  ////                                popup.style.transform = "translate(-50%, -50%)";
-  ////                                popup.style.backgroundColor = "rgb(234, 32, 39)";
-  ////                                popup.style.color = "white";
-  ////                                popup.style.padding = "15px";
-  ////                                popup.style.borderRadius = "10px";
-  ////                                popup.style.display = "none";
-  ////                                document.body.appendChild(popup);
-  ////
-  //                                // 弹出悬浮框提示信息
-  //                                popup.innerText = "当前种子仍有错误!";
-  //                                popup.style.display = "block";
-  //
-  //                                // 1秒后隐藏悬浮框
-  //                                setTimeout(function() {
-  //                                    popup.style.display = "none";
-  //                                }, 1000);
-  //                            }
-  //                            event.preventDefault(); // 阻止超链接的默认行为
-  //                            // 设置标记以供新页面使用
-  //                            GM_setValue('autoCheckAndConfirm', true);
-  //                            if (autoclose) {
-  //                                GM_setValue('autoClose', true);
-  //                            }
-  //                            if (autoback) {
-  //                                GM_setValue('autoBack', true);
-  //                            }
-  //                            // 找到并点击指定按钮
-  //                            var specifiedButton = document.querySelector('#approval'); // 替换为实际的按钮选择器
-  //                            if (specifiedButton) {
-  //                                specifiedButton.click();
-  //                            }
-  //                        });
-  //                        approvelink_foot.addEventListener('click', function(event) {
-  //                            if (error) {
-  //                                // alert("当前种子仍有错误!");
-  //                                GM_setValue('autoFillErrorInfo', false);
-  //                                var popup = document.createElement('div');
-  //                                popup.id = "popup";
-  //                                popup.style.fontSize = "20pt";
-  //                                popup.style.position = "fixed";
-  //                                popup.style.top = "10%";
-  //                                popup.style.left = "10%";
-  //                                popup.style.transform = "translate(-50%, -50%)";
-  //                                popup.style.backgroundColor = "rgb(234, 32, 39)";
-  //                                popup.style.color = "white";
-  //                                popup.style.padding = "15px";
-  //                                popup.style.borderRadius = "10px";
-  //                                popup.style.display = "none";
-  //                                document.body.appendChild(popup);
-  //
-  //                                // 弹出悬浮框提示信息
-  //                                popup.innerText = "当前种子仍有错误!";
-  //                                popup.style.display = "block";
-  //
-  //                                // 1秒后隐藏悬浮框
-  //                                setTimeout(function() {
-  //                                    popup.style.display = "none";
-  //                                }, 1000);
-  //                            }
-  //                            event.preventDefault(); // 阻止超链接的默认行为
-  //                            // 设置标记以供新页面使用
-  //                            GM_setValue('autoCheckAndConfirm', true);
-  //                            if (autoclose) {
-  //                                GM_setValue('autoClose', true);
-  //                            }
-  //                            if (autoback) {
-  //                                GM_setValue('autoBack', true);
-  //                            }
-  //                            // 找到并点击指定按钮
-  //                            var specifiedButton = document.querySelector('#approval'); // 替换为实际的按钮选择器
-  //                            if (specifiedButton) {
-  //                                specifiedButton.click();
-  //                            }
-  //                        });
-  //                        return false; // Exit the loop
-  //                    }
-  //
-  //                    if (this.textContent.includes('审核')) { // Check for text nodes containing the separator
-  //                        isFoundReviewLink = true;
-  //                    }
-  //                });
-  //            }
-  //        }
-  //    }
-  //
-  //     $('#assistant-tooltips').click(function(){
-  //         if (error && isFoundReviewLink) {
-  //             GM_setValue('autoFillErrorInfo', true);
-  //             GM_setValue('errorInfo', document.getElementById('assistant-tooltips').innerHTML);
-  //             // 找到并点击指定按钮
-  //             var specifiedButton = document.querySelector('#approval'); // 替换为实际的按钮选择器
-  //             if (specifiedButton) {
-  //                 specifiedButton.click();
-  //             }
-  //         } else {
-  //             console.log("当前种子无错误或非种审人员，点击无效");
-  //         }
-  //     });
 
   // 主页面操作
   if (
@@ -1513,10 +1303,6 @@
         errorInfo = errorInfo.replace('简介中未检测到IMDb或豆瓣链接', '请补充imdb/豆瓣链接');
         errorInfo = errorInfo.replace('副标题为空', '请补充副标题');
         $('#approval-comment').text(errorInfo);
-
-        // 完成操作后，清除标记
-        // GM_setValue('autoFillErrorInfo', false);
-        // GM_setValue('errorInfo', "");
       }
     }, timeout); // 可能需要根据实际情况调整延迟时间
   }
@@ -1543,59 +1329,7 @@
     GM_setValue('errorInfo', document.getElementById('assistant-tooltips').innerHTML);
   } else if (!error) {
     GM_setValue('autoFillErrorInfo', false);
-    // GM_setValue('errorInfo', "");
   }
-
-  //     if (isFoundReviewLink) {
-  // //         // 查找ID为kdescr的元素内的所有<img>元素
-  // //         var images = document.querySelectorAll('#kdescr img');
-  //
-  // //         // 遍历这些图片
-  // //         images.forEach(function(img) {
-  // //             // 获取每个图片的源链接（src属性）
-  // //             var src = img.getAttribute('src');
-  //
-  // //             // 创建一个新的<a>元素
-  // //             var link = document.createElement('a');
-  // //             // 设置<a>元素的href属性为图片的链接
-  // //             link.setAttribute('href', src);
-  // //             // 设置<a>标签的目标为新标签页打开
-  // //             link.setAttribute('target', '_blank');
-  // //             // 插入文字或说明到<a>标签中，如果需要
-  // //             link.textContent = '打开图片链接 ( 种审用 )';
-  //
-  // //             // 创建一个新的<br>元素用于分行
-  // //             var breakLine1 = document.createElement('br');
-  // //             // 将<br>元素插入到<a>元素后面
-  // //             img.parentNode.insertBefore(breakLine1, img);
-  // //             // 将<a>元素插入到图片元素前面
-  // //             img.parentNode.insertBefore(link, img);
-  // //             // link.style.color = '#EA2027';
-  // //             // 创建一个新的<br>元素用于分行
-  // //             var breakLine2 = document.createElement('br');
-  // //             // 将<br>元素插入到<a>元素后面
-  // //             img.parentNode.insertBefore(breakLine2, img);
-  // //         });
-  //         $('img').click(function(event) {
-  //             // 阻止默认的点击行为
-  //             event.preventDefault();
-  //             // 获取图片链接
-  //             var imageSrc = $(this).attr('src');
-  //             // 打开图片链接
-  //             window.open(imageSrc, '_blank');
-  //         });
-  //         // 为所有 <img> 元素添加鼠标移入事件监听器
-  //         $('img').mouseenter(function() {
-  //             // 将鼠标样式设置为手型
-  //             $(this).css('cursor', 'pointer');
-  //         });
-  //
-  //         // 为所有 <img> 元素添加鼠标移出事件监听器
-  //         $('img').mouseleave(function() {
-  //             // 将鼠标样式恢复默认
-  //             $(this).css('cursor', 'auto');
-  //         });
-  //     }
 
   if (!isWaitImgLoad) {
     if (error) {
@@ -1616,5 +1350,4 @@
     $('#assistant-tooltips').hide();
     $('#assistant-tooltips-warning').hide();
   }
-  // $('#assistant-tooltips-warning').hide();
 })();
