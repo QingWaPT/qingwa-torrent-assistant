@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         qingwa-torrent-assistant-test
 // @namespace    http://tampermonkey.net/
-// @version      2.1.0
+// @version      2.1.1
 // @description  QingWaPT-审种助手-测试版
 // @author       QingWaPT-Official
 // @thanks       SpringSunday-Torrent-Assistant, Agsv-Torrent-Assistant
@@ -537,7 +537,7 @@
       if (text.includes('杜比视界')) {
         isTagDV = true;
       }
-      if ((!text.includes('HDR10+') && text.includes('HDR')) || text.match(/HDR[^1]/)) {
+      if ((!text.includes('HDR10+') && text.includes('HDR')) || text.match(/HDR[^1]/) || text.includes(' HLG')) {
         isTagHDR = true;
       }
       if (text.includes('HDR10+')) {
@@ -804,7 +804,7 @@
     $('#assistant-tooltips').append('标题：HDR类型 缺少/错误<br/>');
     error = true;
   }
-  if (isTagHDR && !isTagHDR10P && !/(^|\s)(HDR|HDR10\+)(\s|$)/.test(title)) {
+  if (isTagHDR && !isTagHDR10P && !/(^|\s)(HLG|HDR|HDR10\+)(\s|$)/.test(title)) {
     $('#assistant-tooltips').append('标题：HDR类型 缺少/错误<br/>');
     error = true;
   }
