@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         qingwa-torrent-assistant
+// @name         qingwa-torrent-assistant-test
 // @namespace    http://tampermonkey.net/
-// @version      1.1.1
-// @description  QingWaPT-审种助手
+// @version      2.1.1
+// @description  QingWaPT-审种助手-测试版
 // @author       QingWaPT-Official
 // @thanks       SpringSunday-Torrent-Assistant, Agsv-Torrent-Assistant
 // @match        *://www.qingwapt.com/details.php*
@@ -16,12 +16,21 @@
 // @grant        GM_xmlhttpRequest
 // @run-at       document-end
 // @license      MIT
-// @downloadURL https://update.greasyfork.org/scripts/490095/qingwa-torrent-assistant.user.js
-// @updateURL https://update.greasyfork.org/scripts/490095/qingwa-torrent-assistant.meta.js
+// @downloadURL https://update.greasyfork.org/scripts/536408/qingwa-torrent-assistant-test.user.js
+// @updateURL https://update.greasyfork.org/scripts/536408/qingwa-torrent-assistant-test.meta.js
 // ==/UserScript==
 
 (function () {
   'use strict';
+
+  // 提升相关种子到顶部
+  setTimeout(function () {
+    const tr = document.querySelector('#kothercopy')?.closest('tr');
+    const tbody = tr?.closest('tbody');
+    if (tr && tbody) {
+      tbody.insertBefore(tr, tbody.firstElementChild);
+    }
+  }, 500);
 
   var isWaitImgLoad = true;
 
@@ -791,6 +800,10 @@
     $('#assistant-tooltips').append('主标题包含禁发小组，请检查<br/>');
     error = true;
   }
+  // if (/(-|@)(HSWEB|StarfallWEB|CSWEB|rainweb|TangPT|Tangweb)/i.test(title)) {
+  //   $('#assistant-tooltips-warning').append('主标题包含灰名单小组，请检查<br/>');
+  //   warning = true;
+  // }
   if (!subtitle) {
     $('#assistant-tooltips').append('副标题为空<br/>');
     error = true;
