@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         qingwa-torrent-assistant-test
 // @namespace    http://tampermonkey.net/
-// @version      2.1.1
+// @version      2.1.2
 // @description  QingWaPT-审种助手-测试版
 // @author       QingWaPT-Official
 // @thanks       SpringSunday-Torrent-Assistant, Agsv-Torrent-Assistant
@@ -23,14 +23,16 @@
 (function () {
   'use strict';
 
-  // 提升相关种子到顶部
-  setTimeout(function () {
-    const tr = document.querySelector('#kothercopy')?.closest('tr');
-    const tbody = tr?.closest('tbody');
+  // 提升相关种子与做种数到顶部
+  ['#kothercopy', '#peercount'].forEach(selector => {
+  setTimeout(() => {
+  const tr = document.querySelector(selector)?.closest('tr');
+  const tbody = tr?.closest('tbody');
     if (tr && tbody) {
       tbody.insertBefore(tr, tbody.firstElementChild);
-    }
-  }, 500);
+      }
+    }, 500);
+  });
 
   var isWaitImgLoad = true;
 
