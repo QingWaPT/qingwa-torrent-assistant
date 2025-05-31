@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         qingwa-torrent-assistant-test
 // @namespace    http://tampermonkey.net/
-// @version      2.1.2
+// @version      2.1.3
 // @description  QingWaPT-审种助手-测试版
 // @author       QingWaPT-Official
 // @thanks       SpringSunday-Torrent-Assistant, Agsv-Torrent-Assistant
@@ -791,7 +791,7 @@
     error = true;
   }
   if (
-    /(-|@)(FGT|NSBC|BATWEB|GPTHD|DreamHD|BlackTV|CatWEB|Xiaomi|Huawei|MOMOWEB|DDHDTV|SeeWeb|TagWeb|SonyHD|MiniHD|BitsTV|ALT|LelveTV|NukeHD|ZeroTV|HotTV|EntTV|GameHD|SmY|SeeHD|ParkHD|VeryPSP|DWR|XLMV|XJCTV|Mp4Ba|Huluwa)/i.test(
+    /(-|@)(FGT|NSBC|BATWEB|GPTHD|DreamHD|BlackTV|CatWEB|Xiaomi|Huawei|MOMOWEB|DDHDTV|SeeWeb|TagWeb|SonyHD|MiniHD|BitsTV|ALT|LelveTV|NukeHD|ZeroTV|HotTV|EntTV|GameHD|SmY|SeeHD|ParkHD|VeryPSP|DWR|XLMV|XJCTV|Mp4Ba|Huluwa|HotWEB)/i.test(
       title
     )
   ) {
