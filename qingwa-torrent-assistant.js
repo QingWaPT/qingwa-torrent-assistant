@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         qingwa-torrent-assistant-test
 // @namespace    http://tampermonkey.net/
-// @version      2.1.3
+// @version      2.1.4
 // @description  QingWaPT-审种助手-测试版
 // @author       QingWaPT-Official
 // @thanks       SpringSunday-Torrent-Assistant, Agsv-Torrent-Assistant
@@ -25,11 +25,11 @@
 
   // 提升相关种子与做种数到顶部
   ['#kothercopy', '#peercount'].forEach(selector => {
-  setTimeout(() => {
-  const tr = document.querySelector(selector)?.closest('tr');
-  const tbody = tr?.closest('tbody');
-    if (tr && tbody) {
-      tbody.insertBefore(tr, tbody.firstElementChild);
+    setTimeout(() => {
+      const tr = document.querySelector(selector)?.closest('tr');
+      const tbody = tr?.closest('tbody');
+      if (tr && tbody) {
+        tbody.insertBefore(tr, tbody.firstElementChild);
       }
     }, 500);
   });
@@ -166,6 +166,17 @@
 
     return -1;
   };
+
+
+  function isTitleStartsWithTVStation(title) {
+    const tvStations = [
+      'DragonTV', 'ZJTV', 'HNTV', 'HNSTV', 'GDTV', 'JSTV', 'BRTV',
+      'Jade', 'Pearl', 'MATV', 'HOY TV', 'PHOENIX HK', 'TVB', 'ViuTV', 'RTHK31', 'CWJDTV'
+    ];
+    const tvStationPrefix = ['CCTV'];
+
+    return tvStations.some(station => title.startsWith(station + ' ')) || tvStationPrefix.some(prefix => title.startsWith(prefix));
+  }
 
   var isBriefContainsInfo = false; //是否包含Mediainfo
   if (Brief.includes('Complete name') && Brief.includes('Movie name') && Brief.includes('Video')) {
@@ -416,6 +427,7 @@
   var isMediainfoEmpty = false; //Mediainfo栏内容是否为空
   var isInfoCorrect = false; //检查info信息是否正确
   var isBiggerThan1T = false; //种子体积是否大于1T
+  var fileCount; //种子文件数量
   // 禁转 官方 中字 国语 粤语 完结 VCB-Studio DIY 原生原盘 Remux 杜比视界 HDR HDR10+ 合集 驻站
   var isReseedProhibited = false; //禁转
   var isOfficialSeedLabel = false; //官方
@@ -600,6 +612,7 @@
     if (td.text().trim() == '海报') {
       poster = $('#kposter').children().attr('src');
     }
+    
     if (td.text() == 'MediaInfo') {
       //$(this).find("")
       let md = td.parent().children().last();
@@ -676,7 +689,17 @@
         isHDR = true;
       }
     }
+
+    if (td.text() == '种子文件') {
+      var text = td.parent().children().last().text();
+      var fileCountMatch = text.match(/文件数：(\d+)个文件/);
+      if (fileCountMatch) {
+        fileCount = parseInt(fileCountMatch[1]);
+      }
+    }
   }
+
+  var isISORelease = (title.endsWith('-MTeam') || (title.endsWith('-TTG') && isTagUNTOUCHED && !isDIY)) && (type == 1 || type == 8);
 
   function containsBBCode(str) {
     // 创建一个正则表达式来匹配 [/b]、[/color] 等结束标签
@@ -685,6 +708,10 @@
     // 使用正则表达式的 test 方法来检查字符串
     return regex.test(str);
   }
+
+
+
+
 
   var screenshot = '';
   var pngCount = 0;
@@ -790,6 +817,12 @@
     $('#assistant-tooltips').append('标题：HDTV 资源, AVC 或 H.264 应改为 H264<br/>');
     error = true;
   }
+
+  if (type == 4 && isTitleStartsWithTVStation(title)) {
+    $('#assistant-tooltips').append('电视台名不在正确位置<br/>');
+    error = true;
+  }
+  
   if (
     /(-|@)(FGT|NSBC|BATWEB|GPTHD|DreamHD|BlackTV|CatWEB|Xiaomi|Huawei|MOMOWEB|DDHDTV|SeeWeb|TagWeb|SonyHD|MiniHD|BitsTV|ALT|LelveTV|NukeHD|ZeroTV|HotTV|EntTV|GameHD|SmY|SeeHD|ParkHD|VeryPSP|DWR|XLMV|XJCTV|Mp4Ba|Huluwa|HotWEB)/i.test(
       title
@@ -821,10 +854,10 @@
     if (title_type && title_type !== type) {
       $('#assistant-tooltips').append(
         '标题检测媒介为' +
-          type_constant[title_type] +
-          '，选择媒介为' +
-          type_constant[type] +
-          '<br/>'
+        type_constant[title_type] +
+        '，选择媒介为' +
+        type_constant[type] +
+        '<br/>'
       );
       error = true;
     }
@@ -836,10 +869,10 @@
     if (title_encode && title_encode !== encode) {
       $('#assistant-tooltips').append(
         '标题检测视频编码为' +
-          encode_constant[title_encode] +
-          '，选择视频编码为' +
-          encode_constant[encode] +
-          '<br/>'
+        encode_constant[title_encode] +
+        '，选择视频编码为' +
+        encode_constant[encode] +
+        '<br/>'
       );
       error = true;
     }
@@ -851,10 +884,10 @@
     if (title_audio && title_audio !== audio) {
       $('#assistant-tooltips').append(
         '标题检测音频编码为' +
-          audio_constant[title_audio] +
-          '，选择音频编码为' +
-          audio_constant[audio] +
-          '<br/>'
+        audio_constant[title_audio] +
+        '，选择音频编码为' +
+        audio_constant[audio] +
+        '<br/>'
       );
       error = true;
     }
@@ -866,10 +899,10 @@
     if (title_resolution && title_resolution !== resolution) {
       $('#assistant-tooltips').append(
         '标题检测分辨率为' +
-          resolution_constant[title_resolution] +
-          '，选择分辨率为' +
-          resolution_constant[resolution] +
-          '<br/>'
+        resolution_constant[title_resolution] +
+        '，选择分辨率为' +
+        resolution_constant[resolution] +
+        '<br/>'
       );
       error = true;
     }
@@ -965,6 +998,16 @@
       $('#assistant-tooltips').append('将标题中的HDR类型置于视频编码前面<br/>');
       error = true;
     }
+  }
+
+  if (title.endsWith('-U2')) {
+    $('#assistant-tooltips').append('发布组有误，请往源站U2确认<br/>');
+    error = true;
+  }
+
+  if (isISORelease && fileCount > 10) {
+    $('#assistant-tooltips-warning').append('源站为.iso格式发布，注意检查dupe，本站以源站文件结构优先<br/>');
+    warning = true;
   }
 
   if (title_type == type) {
