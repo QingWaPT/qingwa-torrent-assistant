@@ -427,6 +427,7 @@
   var isMediainfoEmpty = false; //Mediainfo栏内容是否为空
   var isInfoCorrect = false; //检查info信息是否正确
   var isBiggerThan1T = false; //种子体积是否大于1T
+  var fileCount; //种子文件数量
   // 禁转 官方 中字 国语 粤语 完结 VCB-Studio DIY 原生原盘 Remux 杜比视界 HDR HDR10+ 合集 驻站
   var isReseedProhibited = false; //禁转
   var isOfficialSeedLabel = false; //官方
@@ -611,6 +612,7 @@
     if (td.text().trim() == '海报') {
       poster = $('#kposter').children().attr('src');
     }
+    
     if (td.text() == 'MediaInfo') {
       //$(this).find("")
       let md = td.parent().children().last();
@@ -687,7 +689,17 @@
         isHDR = true;
       }
     }
+
+    if (td.text() == '种子文件') {
+      var text = td.parent().children().last().text();
+      var fileCountMatch = text.match(/文件数：(\d+)个文件/);
+      if (fileCountMatch) {
+        fileCount = parseInt(fileCountMatch[1]);
+      }
+    }
   }
+
+  var isISORelease = (title.endsWith('-MTeam') || (title.endsWith('-TTG') && isTagUNTOUCHED && !isDIY)) && (type == 1 || type == 8);
 
   function containsBBCode(str) {
     // 创建一个正则表达式来匹配 [/b]、[/color] 等结束标签
@@ -986,6 +998,16 @@
       $('#assistant-tooltips').append('将标题中的HDR类型置于视频编码前面<br/>');
       error = true;
     }
+  }
+
+  if (title.endsWith('-U2')) {
+    $('#assistant-tooltips').append('发布组有误，请往源站U2确认<br/>');
+    error = true;
+  }
+
+  if (isISORelease && fileCount > 10) {
+    $('#assistant-tooltips-warning').append('源站为.iso格式发布，注意检查dupe，本站以源站文件结构优先<br/>');
+    warning = true;
   }
 
   if (title_type == type) {
