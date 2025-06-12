@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         qingwa-torrent-assistant-test
 // @namespace    http://tampermonkey.net/
-// @version      2.1.3
+// @version      2.1.4
 // @description  QingWaPT-审种助手-测试版
 // @author       QingWaPT-Official
 // @thanks       SpringSunday-Torrent-Assistant, Agsv-Torrent-Assistant
