@@ -25,11 +25,11 @@
 
   // 提升相关种子与做种数到顶部
   ['#kothercopy', '#peercount'].forEach(selector => {
-  setTimeout(() => {
-  const tr = document.querySelector(selector)?.closest('tr');
-  const tbody = tr?.closest('tbody');
-    if (tr && tbody) {
-      tbody.insertBefore(tr, tbody.firstElementChild);
+    setTimeout(() => {
+      const tr = document.querySelector(selector)?.closest('tr');
+      const tbody = tr?.closest('tbody');
+      if (tr && tbody) {
+        tbody.insertBefore(tr, tbody.firstElementChild);
       }
     }, 500);
   });
@@ -166,6 +166,17 @@
 
     return -1;
   };
+
+
+  function isTitleStartsWithTVStation(title) {
+    const tvStations = [
+      'DragonTV', 'ZJTV', 'HNTV', 'HNSTV', 'GDTV', 'JSTV', 'BRTV',
+      'Jade', 'Pearl', 'MATV', 'HOY TV', 'PHOENIX HK', 'TVB', 'ViuTV', 'RTHK31', 'CWJDTV'
+    ];
+    const tvStationPrefix = ['CCTV'];
+
+    return tvStations.some(station => title.startsWith(station + ' ')) || tvStationPrefix.some(prefix => title.startsWith(prefix));
+  }
 
   var isBriefContainsInfo = false; //是否包含Mediainfo
   if (Brief.includes('Complete name') && Brief.includes('Movie name') && Brief.includes('Video')) {
@@ -686,6 +697,10 @@
     return regex.test(str);
   }
 
+
+
+
+
   var screenshot = '';
   var pngCount = 0;
   var imgCount = 0;
@@ -790,6 +805,12 @@
     $('#assistant-tooltips').append('标题：HDTV 资源, AVC 或 H.264 应改为 H264<br/>');
     error = true;
   }
+
+  if (type == 4 && isTitleStartsWithTVStation(title)) {
+    $('#assistant-tooltips').append('电视台名不在正确位置<br/>');
+    error = true;
+  }
+  
   if (
     /(-|@)(FGT|NSBC|BATWEB|GPTHD|DreamHD|BlackTV|CatWEB|Xiaomi|Huawei|MOMOWEB|DDHDTV|SeeWeb|TagWeb|SonyHD|MiniHD|BitsTV|ALT|LelveTV|NukeHD|ZeroTV|HotTV|EntTV|GameHD|SmY|SeeHD|ParkHD|VeryPSP|DWR|XLMV|XJCTV|Mp4Ba|Huluwa|HotWEB)/i.test(
       title
@@ -821,10 +842,10 @@
     if (title_type && title_type !== type) {
       $('#assistant-tooltips').append(
         '标题检测媒介为' +
-          type_constant[title_type] +
-          '，选择媒介为' +
-          type_constant[type] +
-          '<br/>'
+        type_constant[title_type] +
+        '，选择媒介为' +
+        type_constant[type] +
+        '<br/>'
       );
       error = true;
     }
@@ -836,10 +857,10 @@
     if (title_encode && title_encode !== encode) {
       $('#assistant-tooltips').append(
         '标题检测视频编码为' +
-          encode_constant[title_encode] +
-          '，选择视频编码为' +
-          encode_constant[encode] +
-          '<br/>'
+        encode_constant[title_encode] +
+        '，选择视频编码为' +
+        encode_constant[encode] +
+        '<br/>'
       );
       error = true;
     }
@@ -851,10 +872,10 @@
     if (title_audio && title_audio !== audio) {
       $('#assistant-tooltips').append(
         '标题检测音频编码为' +
-          audio_constant[title_audio] +
-          '，选择音频编码为' +
-          audio_constant[audio] +
-          '<br/>'
+        audio_constant[title_audio] +
+        '，选择音频编码为' +
+        audio_constant[audio] +
+        '<br/>'
       );
       error = true;
     }
@@ -866,10 +887,10 @@
     if (title_resolution && title_resolution !== resolution) {
       $('#assistant-tooltips').append(
         '标题检测分辨率为' +
-          resolution_constant[title_resolution] +
-          '，选择分辨率为' +
-          resolution_constant[resolution] +
-          '<br/>'
+        resolution_constant[title_resolution] +
+        '，选择分辨率为' +
+        resolution_constant[resolution] +
+        '<br/>'
       );
       error = true;
     }
