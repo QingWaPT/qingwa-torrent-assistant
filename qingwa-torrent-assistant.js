@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         qingwa-torrent-assistant-test
 // @namespace    http://tampermonkey.net/
-// @version      2.1.4
+// @version      2.1.5
 // @description  QingWaPT-审种助手-测试版
 // @author       QingWaPT-Official
 // @thanks       SpringSunday-Torrent-Assistant, Agsv-Torrent-Assistant
@@ -177,6 +177,27 @@
 
     return tvStations.some(station => title.startsWith(station + ' ')) || tvStationPrefix.some(prefix => title.startsWith(prefix));
   }
+  // 解析文件大小，返回GB为单位的数值
+  var parseFileSize = function (text) {
+    // 匹配文件大小的正则表达式，支持 GB, TB, MB 单位
+    var sizeMatch = text.match(/(\d+(?:\.\d+)?)\s*(GB|TB|MB)/i);
+    if (!sizeMatch) return 0;
+    
+    var size = parseFloat(sizeMatch[1]);
+    var unit = sizeMatch[2].toUpperCase();
+    
+    // 转换为GB
+    switch (unit) {
+      case 'TB':
+        return size * 1024;
+      case 'GB':
+        return size;
+      case 'MB':
+        return size / 1024;
+      default:
+        return 0;
+    }
+  };
 
   var isBriefContainsInfo = false; //是否包含Mediainfo
   if (Brief.includes('Complete name') && Brief.includes('Movie name') && Brief.includes('Video')) {
@@ -206,6 +227,12 @@
   }
 
   var title = $('#top').text();
+
+  // 检测种子免费状态（在清理title之前）
+  let isPermanentFree = title.includes('免费') && !title.includes('剩余时间');
+  let isPermanent30Percent = title.includes('30%') && !title.includes('剩余时间');
+  
+  // 清理title
   title = title
     .replace(
       /禁转|\((已审|冻结|待定)\)|\[(免费|50%|2X免费|30%|2X 50%)\]|\(限时\d+.*\)|\[2X\]|\[(推荐|热门|经典|已审)\]/g,
@@ -428,6 +455,9 @@
   var isInfoCorrect = false; //检查info信息是否正确
   var isBiggerThan1T = false; //种子体积是否大于1T
   var fileCount; //种子文件数量
+  var fileSizeGB = 0; //文件大小（GB）
+  var isBiggerThan150GB = false; //种子体积是否大于150GB
+  var isBiggerThan500GB = false; //种子体积是否大于500GB
   // 禁转 官方 中字 国语 粤语 完结 VCB-Studio DIY 原生原盘 Remux 杜比视界 HDR HDR10+ 合集 驻站
   var isReseedProhibited = false; //禁转
   var isOfficialSeedLabel = false; //官方
@@ -538,8 +568,17 @@
       if (text.includes('制作组')) {
         isGroupSelected = true;
       }
-      if (text.includes('TB')) {
+      
+      // 解析文件大小
+      fileSizeGB = parseFileSize(text);
+      if (fileSizeGB >= 1024) {
         isBiggerThan1T = true;
+      }
+      if (fileSizeGB >= 150) {
+        isBiggerThan150GB = true;
+      }
+      if (fileSizeGB >= 500) {
+        isBiggerThan500GB = true;
       }
       // 类型
       Object.keys(cat_constant).some((key) => {
@@ -1097,6 +1136,28 @@
   if (title_ES >= 0 && title_ES < 2 && isTagCollection) {
     $('#assistant-tooltips').append('不应选择合集标签<br/>');
     error = true;
+  }
+
+  // 大包检查
+  if (isBiggerThan500GB) {
+    if (!isPermanentFree) {
+      $('#assistant-tooltips-warning').append('大包，请设置为永久免费<br/>');
+      warning = true;
+    }
+  } else if (isBiggerThan150GB) {
+    if (title_ES == 1) {
+      // 单季大包
+      if (!isPermanent30Percent) {
+        $('#assistant-tooltips-warning').append('单季大包，请设置为永久30%<br/>');
+        warning = true;
+      }
+    } else {
+      // 非单季大包
+      if (!isPermanentFree) {
+        $('#assistant-tooltips-warning').append('大包，请设置为永久免费<br/>');
+        warning = true;
+      }
+    }
   }
 
   if (!dbUrl && !godDramaSeed) {
