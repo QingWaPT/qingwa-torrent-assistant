@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         qingwa-torrent-assistant-test
 // @namespace    http://tampermonkey.net/
-// @version      2.1.5
+// @version      2.1.6
 // @description  QingWaPT-审种助手-测试版
 // @author       QingWaPT-Official
 // @thanks       SpringSunday-Torrent-Assistant, Agsv-Torrent-Assistant
@@ -229,6 +229,7 @@
   var title = $('#top').text();
 
   // 检测种子免费状态（在清理title之前）
+  let isFree = title.includes('免费');
   let isPermanentFree = title.includes('免费') && !title.includes('剩余时间');
   let isPermanent30Percent = title.includes('30%') && !title.includes('剩余时间');
   
@@ -456,7 +457,7 @@
   var isBiggerThan1T = false; //种子体积是否大于1T
   var fileCount; //种子文件数量
   var fileSizeGB = 0; //文件大小（GB）
-  var isBiggerThan150GB = false; //种子体积是否大于150GB
+  var isBiggerThan180GB = false; //种子体积是否大于180GB
   var isBiggerThan500GB = false; //种子体积是否大于500GB
   // 禁转 官方 中字 国语 粤语 完结 VCB-Studio DIY 原生原盘 Remux 杜比视界 HDR HDR10+ 合集 驻站
   var isReseedProhibited = false; //禁转
@@ -574,8 +575,8 @@
       if (fileSizeGB >= 1024) {
         isBiggerThan1T = true;
       }
-      if (fileSizeGB >= 150) {
-        isBiggerThan150GB = true;
+      if (fileSizeGB >= 180) {
+        isBiggerThan180GB = true;
       }
       if (fileSizeGB >= 500) {
         isBiggerThan500GB = true;
@@ -1144,10 +1145,10 @@
       $('#assistant-tooltips-warning').append('大包，请设置为永久免费<br/>');
       warning = true;
     }
-  } else if (isBiggerThan150GB) {
+  } else if (isBiggerThan180GB) {
     if (title_ES == 1) {
       // 单季大包
-      if (!isPermanent30Percent) {
+      if (!isPermanent30Percent && !isFree) {
         $('#assistant-tooltips-warning').append('单季大包，请设置为永久30%<br/>');
         warning = true;
       }
