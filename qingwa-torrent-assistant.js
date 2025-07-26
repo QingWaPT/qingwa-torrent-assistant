@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         qingwa-torrent-assistant
 // @namespace    http://tampermonkey.net/
-// @version      1.1.1
+// @version      1.1.2
 // @description  QingWaPT-审种助手
 // @author       QingWaPT-Official
 // @thanks       SpringSunday-Torrent-Assistant, Agsv-Torrent-Assistant
@@ -156,6 +156,16 @@
     return -1;
   };
 
+  function isTitleStartsWithTVStation(title) {
+    const tvStations = [
+      'DragonTV', 'ZJTV', 'HNTV', 'HNSTV', 'GDTV', 'JSTV', 'BRTV',
+      'Jade', 'Pearl', 'MATV', 'HOY TV', 'PHOENIX HK', 'TVB', 'ViuTV', 'RTHK31', 'CWJDTV'
+    ];
+    const tvStationPrefix = ['CCTV'];
+
+    return tvStations.some(station => title.startsWith(station + ' ')) || tvStationPrefix.some(prefix => title.startsWith(prefix));
+  }
+  
   var isBriefContainsInfo = false; //是否包含Mediainfo
   if (Brief.includes('Complete name') && Brief.includes('Movie name') && Brief.includes('Video')) {
     isBriefContainsInfo = true;
@@ -498,19 +508,20 @@
       if (text.includes('Remux')) {
         isTagREMUX = true;
       }
-
+      
       if (text.includes('杜比视界')) {
         isTagDV = true;
       }
-      if ((!text.includes('HDR10+') && text.includes('HDR')) || text.match(/HDR[^1]/) || text.includes(' HLG')) {
+      
+      if (text.includes("HDR10+HDR")) {
+        isTagHDR = true;
+      } else if (text.includes("HDR10+")) {
+        isTagHDR = false;
+      } else if (text.includes("HDR") || text.includes("HLG")) {
         isTagHDR = true;
       }
-      if (text.includes('HDR10+')) {
-        isTagHDR10P = true;
-      }
-    }
-
-    if (td.text() == '基本信息') {
+      
+      if (td.text() == '基本信息') {
       var text = td.parent().children().last().text();
       if (text.includes('制作组')) {
         isGroupSelected = true;
@@ -779,6 +790,12 @@
     $('#assistant-tooltips').append('标题：HDTV 资源, AVC 或 H.264 应改为 H264<br/>');
     error = true;
   }
+
+  if (type == 4 && isTitleStartsWithTVStation(title)) {
+    $('#assistant-tooltips').append('电视台名不在正确位置<br/>');
+    error = true;
+  }
+    
   if (
     /(-|@)(FGT|NSBC|BATWEB|GPTHD|DreamHD|BlackTV|CatWEB|Xiaomi|Huawei|MOMOWEB|DDHDTV|SeeWeb|TagWeb|SonyHD|MiniHD|BitsTV|ALT|LelveTV|NukeHD|ZeroTV|HotTV|EntTV|GameHD|SmY|SeeHD|ParkHD|VeryPSP|DWR|XLMV|XJCTV|Mp4Ba|Huluwa)/i.test(
       title
