@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         qingwa-torrent-assistant-test
 // @namespace    http://tampermonkey.net/
-// @version      2.1.7
+// @version      2.1.8
 // @description  QingWaPT-审种助手-测试版
 // @author       QingWaPT-Official
 // @thanks       SpringSunday-Torrent-Assistant, Agsv-Torrent-Assistant
-// @match        *://www.qingwapt.com/details.php*
+// @match        *://*.qingwapt.com/details.php*
 // @match        *://new.qingwa.pro/details.php*
 // @match        *://www.qingwapt.org/details.php*
 // @icon         https://qingwapt.com/logo/green.svg
@@ -973,7 +973,12 @@
       error = true;
     }
   }
-
+  
+  if (/第0?\d{1,2}集/.test(subtitle) && isTagComplete === true) {
+    $('#assistant-tooltips-warning').append('副标题含有“第XX集”但是选择了完结标签，请检查是否为分集<br/>');
+    warning = true;
+  }
+  
   if (title_source_pos == -1) {
     $('#assistant-tooltips').append('标题中缺少来源或媒介<br/>');
     error = true;
