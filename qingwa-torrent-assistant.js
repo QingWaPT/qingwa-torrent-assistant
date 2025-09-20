@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         qingwa-torrent-assistant
 // @namespace    http://tampermonkey.net/
-// @version      1.1.2
+// @version      1.1.3
 // @description  QingWaPT-审种助手
 // @author       QingWaPT-Official
 // @thanks       SpringSunday-Torrent-Assistant, Agsv-Torrent-Assistant
-// @match        *://www.qingwapt.com/details.php*
+// @match        *://*.qingwapt.com/details.php*
 // @match        *://new.qingwa.pro/details.php*
 // @match        *://www.qingwapt.org/details.php*
 // @icon         https://qingwapt.com/logo/green.svg
@@ -520,7 +520,10 @@
       } else if (text.includes("HDR") || text.includes("HLG")) {
         isTagHDR = true;
       }
-      
+      if (text.includes('HDR10+')) {
+        isTagHDR10P = true;
+      }
+
       if (td.text() == '基本信息') {
       var text = td.parent().children().last().text();
       if (text.includes('制作组')) {
@@ -968,7 +971,12 @@
       error = true;
     }
   }
-
+ 
+  if (/第0?\d{1,2}集/.test(subtitle) && isTagComplete === true) {
+    $('#assistant-tooltips-warning').append('副标题含有“第XX集”但是选择了完结标签，请检查是否为分集<br/>');
+    warning = true;
+  }
+  
   if (title_type == type) {
     if (title_type == 1 || title_type == 8 || title_type == 11) {
       if (title_wrongBD) {
