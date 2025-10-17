@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         qingwa-torrent-assistant-test
 // @namespace    http://tampermonkey.net/
-// @version      2.1.8
+// @version      2.1.9
 // @description  QingWaPT-审种助手-测试版
 // @author       QingWaPT-Official
 // @thanks       SpringSunday-Torrent-Assistant, Agsv-Torrent-Assistant
@@ -1301,7 +1301,12 @@
     $('#assistant-tooltips').append('主标题缺少比特率<br/>');
     error = true;
   }
-
+  
+  if (imgCount <= 3) {
+    $('#assistant-tooltips-warning').append('图片数量小于3，当前只有 ' + imgCount + ' 张图片，请检查是否缺失封面或者3张截图');
+    warning = true;
+  }
+  
   var startTime = new Date().getTime();
   var intervalId = setInterval(function () {
     var allload = true;
